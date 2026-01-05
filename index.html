@@ -1,0 +1,2227 @@
+<!DOCTYPE html>
+<html lang="be">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статыстыка Мафіі</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Baskerville', 'Garamond', 'Times New Roman', serif;
+            background: #f5f5f5;
+            color: #2c2c2c;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #d0d0d0;
+            border-radius: 2px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2c3e50;
+            padding: 40px 30px;
+            text-align: center;
+            border-bottom: 1px solid #34495e;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #ecf0f1;
+            letter-spacing: 2px;
+            font-weight: 400;
+            text-transform: uppercase;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            color: #bdc3c7;
+            margin-top: 10px;
+            font-weight: 300;
+        }
+
+        .back-button {
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #ecf0f1;
+            font-size: 2em;
+            cursor: pointer;
+            padding: 10px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .back-button.show {
+            display: flex;
+        }
+
+        .header.player-view {
+            text-align: left;
+            padding-left: 100px;
+        }
+
+        .header.player-view h1 {
+            font-size: 2em;
+        }
+
+        .header.player-view p {
+            display: none;
+        }
+
+        .status {
+            padding: 15px 30px;
+            margin: 0;
+            font-size: 14px;
+            display: none;
+            background: #e3f2fd;
+            border-left: 3px solid #1976d2;
+            color: #0d47a1;
+        }
+
+        .status.error {
+            background: #ffebee;
+            border-left-color: #c62828;
+            color: #b71c1c;
+        }
+
+        .status.success {
+            background: #e8f5e9;
+            border-left-color: #388e3c;
+            color: #1b5e20;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .table-wrapper {
+            position: relative;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #ffffff;
+        }
+
+        th {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px 10px;
+            text-align: center;
+            font-weight: 500;
+            border: 1px solid #34495e;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            white-space: nowrap;
+            position: relative;
+            font-family: 'Helvetica Neue', 'Arial', sans-serif;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        th:hover {
+            background: #34495e;
+            color: #ffffff;
+        }
+
+        th.sortable::after {
+            content: ' ⇅';
+            opacity: 0.4;
+        }
+
+        th.sorted-asc::after {
+            content: ' ▲';
+            opacity: 1;
+            color: #ecf0f1;
+        }
+
+        th.sorted-desc::after {
+            content: ' ▼';
+            opacity: 1;
+            color: #ecf0f1;
+        }
+
+        th:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 11;
+            text-align: left;
+            min-width: 150px;
+        }
+
+        td {
+            padding: 12px 10px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+            color: #2c2c2c;
+            font-size: 14px;
+        }
+
+        td:first-child {
+            position: sticky;
+            left: 0;
+            background: #f8f9fa;
+            font-weight: 600;
+            border-right: 1px solid #d0d0d0;
+            z-index: 5;
+            text-align: left;
+            color: #2c3e50;
+        }
+
+        tbody tr:nth-child(odd) {
+            background: #ffffff;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        tbody tr:nth-child(odd) td:first-child {
+            background: #f8f9fa;
+        }
+
+        tbody tr:nth-child(even) td:first-child {
+            background: #f0f1f2;
+        }
+
+        tbody tr:hover {
+            background: #e8eaf6;
+        }
+
+        tbody tr:hover td:first-child {
+            background: #dce1e9;
+        }
+
+        tbody tr {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        /* Player Stats Page */
+        .player-stats-page {
+            display: none;
+        }
+
+        .player-stats-page.show {
+            display: block;
+        }
+
+        .player-stats-header {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 25px 30px;
+            border-bottom: 1px solid #34495e;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-stats-header h2 {
+            font-size: 1.8em;
+            font-weight: 400;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+
+        .player-search-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .player-search-container {
+            position: relative;
+        }
+
+        .player-search-input {
+            font-size: 1.5em;
+            font-weight: 400;
+            letter-spacing: 1px;
+            padding: 8px 4px;
+            border: none;
+            border-bottom: 2px solid #ecf0f1;
+            background: transparent;
+            color: #ecf0f1;
+            font-family: 'Baskerville', 'Garamond', 'Times New Roman', serif;
+            transition: border-color 0.3s;
+            min-width: 230px;
+        }
+
+        .player-search-input::placeholder {
+            color: rgba(236, 240, 241, 0.6);
+        }
+
+        .player-search-input:focus {
+            outline: none;
+            border-bottom-color: #3498db;
+        }
+
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 300px;
+            overflow-y: auto;
+            background: #ffffff;
+            border: 1px solid #34495e;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1005;
+            display: none;
+            margin-top: 4px;
+        }
+
+        .autocomplete-dropdown::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .autocomplete-dropdown::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .autocomplete-dropdown::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .autocomplete-dropdown.show {
+            display: block;
+        }
+
+        .autocomplete-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            color: #2c3e50;
+            font-size: 1.1em;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.selected {
+            background: #e8eaf6;
+        }
+
+        .autocomplete-item.no-results {
+            cursor: default;
+            color: #95a5a6;
+            font-style: italic;
+        }
+
+        .autocomplete-item.no-results:hover {
+            background: #ffffff;
+        }
+
+        .compare-btn {
+            background: #3498db;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .compare-btn:hover {
+            background: #2980b9;
+        }
+
+        .compare-btn:active {
+            transform: scale(0.95);
+        }
+
+        .player-search-container.secondary {
+            display: none;
+        }
+
+        .player-search-container.secondary.show {
+            display: block;
+        }
+
+        .close-compare-btn {
+            background: #e74c3c;
+            color: #ffffff;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            padding: 0;
+        }
+
+        .close-compare-btn:hover {
+            background: #c0392b;
+            transform: rotate(90deg);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .comparison-table th {
+            background: #34495e;
+            color: #ecf0f1;
+            padding: 12px 10px;
+            text-align: center;
+            font-weight: 500;
+            border: 1px solid #2c3e50;
+            font-size: 13px;
+        }
+
+        .comparison-table th:first-child {
+            text-align: left;
+        }
+
+        .comparison-table td {
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+        }
+
+        .comparison-table td:first-child {
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .comparison-table tr:nth-child(odd) {
+            background: #f8f9fa;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #ffffff;
+        }
+
+        .comparison-table .total-row {
+            background: #e8eaf6 !important;
+            font-weight: 600;
+        }
+
+        .comparison-table .team-row {
+            background: #f0f1f2 !important;
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .player-column-header {
+            background: #2c3e50 !important;
+            color: #3498db !important;
+            font-size: 1.1em;
+        }
+
+        .player1-header {
+            color: #27ae60 !important;
+        }
+
+        .player2-header {
+            color: #3498db !important;
+        }
+
+        .stat-bar-gold {
+            background-color: #f39c12;
+        }
+
+        .stat-bar-silver {
+            background-color: #95a5a6;
+        }
+
+        .stat-bar-green {
+            background-color: #27ae60;
+        }
+
+        .stat-bar-blue {
+            background-color: #3498db;
+        }
+
+        .personal-stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .personal-stats-table th {
+            background: #34495e;
+            color: #ecf0f1;
+            padding: 12px 10px;
+            text-align: center;
+            font-weight: 500;
+            border: 1px solid #2c3e50;
+            font-size: 13px;
+            width: 20%;
+        }
+
+        .personal-stats-table th:last-child {
+            width: 60%;
+        }
+
+        .personal-stats-table th:first-child {
+            color: #27ae60;
+        }
+
+        .personal-stats-table th:nth-child(2) {
+            color: #3498db;
+        }
+
+        .personal-stats-table td {
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+            background: inherit;
+        }
+
+        .personal-stats-table td:nth-child(1),
+        .personal-stats-table td:nth-child(2) {
+            width: 20%;
+        }
+
+        .personal-stats-table td:nth-child(3) {
+            width: 60%;
+        }
+
+        .personal-stats-table tbody tr:nth-child(odd) td {
+            background: #f8f9fa;
+        }
+
+        .personal-stats-table tbody tr:nth-child(even) td {
+            background: #ffffff;
+        }
+
+        .personal-stats-table .summary-row td {
+            font-weight: 600;
+            background: #e8eaf6 !important;
+        }
+
+        .personal-stats-table .summary-row td[colspan] {
+            text-align: center;
+        }
+
+        .stat-bar-grey {
+            background-color: #95a5a6;
+        }
+
+        .stat-bar-grey:first-child,
+        .stat-bar-gold:first-child,
+        .stat-bar-green:first-child {
+            margin-right: 8px;
+            border-radius: 4px;
+        }
+
+        .stat-bar-grey:last-child,
+        .stat-bar-silver:last-child,
+        .stat-bar-blue:last-child {
+            margin-left: 8px;
+            border-radius: 4px;
+        }
+
+        .stat-bar-grey:only-child,
+        .stat-bar-gold:only-child,
+        .stat-bar-silver:only-child,
+        .stat-bar-green:only-child,
+        .stat-bar-blue:only-child {
+            margin: 0;
+            border-radius: 4px;
+        }
+
+        .personal-stats-table tbody tr:nth-child(odd) {
+            background: #f8f9fa;
+        }
+
+        .personal-stats-table tbody tr:nth-child(even) {
+            background: #ffffff;
+        }
+
+        .personal-stats-table tbody tr:hover {
+            background: inherit;
+        }
+
+        .personal-stats-table td.highlight {
+            background-color: #e8eaf6 !important;
+            transition: background-color 0.2s;
+        }
+
+        .color-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            vertical-align: middle;
+        }
+
+        .color-red {
+            background-color: #e74c3c;
+        }
+
+        .color-black {
+            background-color: #2c3e50;
+        }
+
+        .stat-bar-container {
+            width: 100%;
+            height: 30px;
+            display: flex;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #bdc3c7;
+            position: relative;
+            background: transparent;
+        }
+
+        .stat-bar-container.with-connector {
+            overflow: visible;
+            border: none;
+        }
+
+        .stat-bar-segment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-bar-red {
+            background-color: #e74c3c;
+        }
+
+        .stat-bar-black {
+            background-color: #2c3e50;
+        }
+
+        .stat-bar-segment {
+            cursor: pointer;
+        }
+
+        .stat-bar-segment:hover {
+            opacity: 0.85;
+        }
+
+        .tables-container {
+            display: block;
+        }
+
+        .table-section {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .player-stats-body {
+            padding: 30px;
+        }
+
+        .stats-section {
+            margin-bottom: 40px;
+        }
+
+        .stats-section h3 {
+            font-size: 1.3em;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 8px;
+        }
+
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .stats-table th {
+            background: #34495e;
+            color: #ecf0f1;
+            padding: 12px 10px;
+            text-align: center;
+            font-weight: 500;
+            border: 1px solid #2c3e50;
+            font-size: 13px;
+        }
+
+        .stats-table td {
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+        }
+
+        .stats-table tr:nth-child(odd) {
+            background: #f8f9fa;
+        }
+
+        .stats-table tr:nth-child(even) {
+            background: #ffffff;
+        }
+
+        .stats-table td:first-child {
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .stats-table .total-row {
+            background: #e8eaf6 !important;
+            font-weight: 600;
+        }
+
+        .stats-table .team-row {
+            background: #f0f1f2 !important;
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .player-stats-loading {
+            text-align: center;
+            padding: 50px;
+            color: #34495e;
+        }
+
+        .games-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .games-table th {
+            background: #34495e;
+            color: #ecf0f1;
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 500;
+            border: 1px solid #2c3e50;
+            font-size: 13px;
+        }
+
+        .games-table td {
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            text-align: left;
+        }
+
+        .games-table tr:nth-child(odd) {
+            background: #f8f9fa;
+        }
+
+        .games-table tr:nth-child(even) {
+            background: #ffffff;
+        }
+
+        .games-table tr:hover {
+            background: #e8eaf6;
+        }
+
+        .win-badge {
+            color: #27ae60;
+            font-weight: 600;
+        }
+
+        .loss-badge {
+            color: #c0392b;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 18px;
+            color: #34495e;
+        }
+
+        .spinner {
+            border: 4px solid #ecf0f1;
+            border-top: 4px solid #34495e;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .win-cell {
+            color: #27ae60;
+            font-weight: 500;
+        }
+
+        .loss-cell {
+            color: #c0392b;
+        }
+
+        .percentage-cell {
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .header::before,
+            .header::after {
+                display: none;
+            }
+
+            .header.player-view {
+                padding-left: 70px;
+            }
+
+            .header.player-view h1 {
+                font-size: 1.5em;
+            }
+
+            .back-button {
+                left: 15px;
+                font-size: 1.5em;
+                width: 40px;
+                height: 40px;
+            }
+
+            th, td {
+                font-size: 12px;
+                padding: 8px 5px;
+            }
+
+            .player-search-wrapper {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .player-search-input {
+                font-size: 1.2em;
+                min-width: 180px;
+            }
+
+            .compare-btn {
+                font-size: 0.8em;
+                padding: 6px 12px;
+            }
+
+            .player-stats-header {
+                padding: 15px 20px;
+            }
+
+            .comparison-table th,
+            .comparison-table td {
+                font-size: 11px;
+                padding: 6px 4px;
+            }
+
+            .personal-stats-table th,
+            .personal-stats-table td {
+                font-size: 12px;
+                padding: 8px 4px;
+            }
+
+            .stat-bar-segment {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header" id="header">
+            <button class="back-button" id="backButton">←</button>
+            <h1 id="headerTitle">МАФІЯ</h1>
+            <p id="headerSubtitle">Статыстыка гульцоў</p>
+        </div>
+
+        <div class="status" id="status"></div>
+
+        <div class="table-wrapper" id="tableWrapper" style="display: none;">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-column="name" title="Гульцы">Гульцы</th>
+                        <th class="sortable" data-column="mPlus" title="Перамогі за мірных">М+</th>
+                        <th class="sortable" data-column="mMinus" title="Паразы за мірных">М-</th>
+                        <th class="sortable" data-column="shPlus" title="Перамогі за шэрыфа">Ш+</th>
+                        <th class="sortable" data-column="shMinus" title="Паразы за шэрыфа">Ш-</th>
+                        <th class="sortable" data-column="mfPlus" title="Перамогі за мафію">Мф+</th>
+                        <th class="sortable" data-column="mfMinus" title="Паразы за мафію">Мф-</th>
+                        <th class="sortable" data-column="dPlus" title="Перамогі за дона">Д+</th>
+                        <th class="sortable" data-column="dMinus" title="Паразы за дона">Д-</th>
+                        <th class="sortable" data-column="red" title="Агулам за чырвоных">Чырвоны</th>
+                        <th class="sortable" data-column="black" title="Агулам за чорных">Чорны</th>
+                        <th class="sortable" data-column="total" title="Усяго гульняў">Усяго</th>
+                        <th class="sortable" data-column="winPct" title="Адсотак перамог">%</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Player Stats Page -->
+        <div class="player-stats-page" id="playerStatsPage">
+            <div class="player-stats-header">
+                <div class="player-search-wrapper">
+                    <div class="player-search-container">
+                        <input 
+                            type="text" 
+                            id="playerSearchInput" 
+                            class="player-search-input" 
+                            placeholder="Увядзіце імя гульца..."
+                            autocomplete="off"
+                        />
+                        <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+                    </div>
+                    <button class="compare-btn" id="compareBtn">Параўнаць</button>
+                    <div class="player-search-container secondary" id="secondarySearchContainer">
+                        <input 
+                            type="text" 
+                            id="playerSearchInput2" 
+                            class="player-search-input" 
+                            placeholder="Выберыце другога гульца"
+                            autocomplete="off"
+                        />
+                        <div class="autocomplete-dropdown" id="autocompleteDropdown2"></div>
+                    </div>
+                    <button class="close-compare-btn" id="closeCompareBtn" style="display: none;">&times;</button>
+                </div>
+            </div>
+            <div class="player-stats-body" id="playerStatsBody">
+                <div class="player-stats-loading">
+                    <div class="spinner"></div>
+                    <p>Загрузка статыстыкі...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://mpasyybxqvzbnxciejqo.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wYXN5eWJ4cXZ6Ym54Y2llanFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MTM5NjAsImV4cCI6MjA4MzE4OTk2MH0.W6OWShmcUwkFgCIRZfeGls0qM7bIFFzcBU06JsKy_cQ';
+
+        let playerData = [];
+        let currentSort = { column: 'name', ascending: true };
+
+        function showStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status show ' + type;
+        }
+
+        function mapSupabaseData(dbRow) {
+            return {
+                name: dbRow.name || '',
+                mPlus: dbRow.m_plus || 0,
+                mMinus: dbRow.m_minus || 0,
+                shPlus: dbRow.sh_plus || 0,
+                shMinus: dbRow.sh_minus || 0,
+                mfPlus: dbRow.mf_plus || 0,
+                mfMinus: dbRow.mf_minus || 0,
+                dPlus: dbRow.d_plus || 0,
+                dMinus: dbRow.d_minus || 0,
+                red: dbRow.red_games || 0,
+                black: dbRow.black_games || 0,
+                total: dbRow.total_games || 0,
+                winPct: parseFloat(dbRow.win_pct) || 0
+            };
+        }
+
+        function sortData(column) {
+            if (currentSort.column === column) {
+                currentSort.ascending = !currentSort.ascending;
+            } else {
+                currentSort.column = column;
+                currentSort.ascending = false; // Default to descending for better stats first
+            }
+
+            playerData.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+
+                // For name, use string comparison
+                if (column === 'name') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                    return currentSort.ascending ? 
+                        aVal.localeCompare(bVal) : 
+                        bVal.localeCompare(aVal);
+                }
+
+                // For numbers
+                return currentSort.ascending ? 
+                    aVal - bVal : 
+                    bVal - aVal;
+            });
+
+            displayTable();
+            updateSortIndicators();
+        }
+
+        function updateSortIndicators() {
+            document.querySelectorAll('th').forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+            });
+
+            const sortedTh = document.querySelector(`th[data-column="${currentSort.column}"]`);
+            if (sortedTh) {
+                sortedTh.classList.add(currentSort.ascending ? 'sorted-asc' : 'sorted-desc');
+            }
+        }
+
+        function displayTable() {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+
+            playerData.forEach(player => {
+                const tr = document.createElement('tr');
+                
+                // Add click handler for player stats
+                tr.addEventListener('click', () => {
+                    showPlayerStats(player.name);
+                });
+                
+                // Player name
+                const tdName = document.createElement('td');
+                tdName.textContent = player.name;
+                tr.appendChild(tdName);
+
+                // M+
+                const tdMPlus = document.createElement('td');
+                tdMPlus.textContent = player.mPlus;
+                tdMPlus.className = 'win-cell';
+                tdMPlus.title = 'Перамогі за мірных';
+                tr.appendChild(tdMPlus);
+
+                // M-
+                const tdMMinus = document.createElement('td');
+                tdMMinus.textContent = player.mMinus;
+                tdMMinus.className = 'loss-cell';
+                tdMMinus.title = 'Паразы за мірных';
+                tr.appendChild(tdMMinus);
+
+                // Sh+
+                const tdShPlus = document.createElement('td');
+                tdShPlus.textContent = player.shPlus;
+                tdShPlus.className = 'win-cell';
+                tdShPlus.title = 'Перамогі за шэрыфа';
+                tr.appendChild(tdShPlus);
+
+                // Sh-
+                const tdShMinus = document.createElement('td');
+                tdShMinus.textContent = player.shMinus;
+                tdShMinus.className = 'loss-cell';
+                tdShMinus.title = 'Паразы за шэрыфа';
+                tr.appendChild(tdShMinus);
+
+                // Mf+
+                const tdMfPlus = document.createElement('td');
+                tdMfPlus.textContent = player.mfPlus;
+                tdMfPlus.className = 'win-cell';
+                tdMfPlus.title = 'Перамогі за мафію';
+                tr.appendChild(tdMfPlus);
+
+                // Mf-
+                const tdMfMinus = document.createElement('td');
+                tdMfMinus.textContent = player.mfMinus;
+                tdMfMinus.className = 'loss-cell';
+                tdMfMinus.title = 'Паразы за мафію';
+                tr.appendChild(tdMfMinus);
+
+                // D+
+                const tdDPlus = document.createElement('td');
+                tdDPlus.textContent = player.dPlus;
+                tdDPlus.className = 'win-cell';
+                tdDPlus.title = 'Перамогі за дона';
+                tr.appendChild(tdDPlus);
+
+                // D-
+                const tdDMinus = document.createElement('td');
+                tdDMinus.textContent = player.dMinus;
+                tdDMinus.className = 'loss-cell';
+                tdDMinus.title = 'Паразы за дона';
+                tr.appendChild(tdDMinus);
+
+                // Red team
+                const tdRed = document.createElement('td');
+                tdRed.textContent = player.red;
+                tdRed.title = 'Агулам за чырвоных';
+                tr.appendChild(tdRed);
+
+                // Black team
+                const tdBlack = document.createElement('td');
+                tdBlack.textContent = player.black;
+                tdBlack.title = 'Агулам за чорных';
+                tr.appendChild(tdBlack);
+
+                // Total games
+                const tdTotal = document.createElement('td');
+                tdTotal.textContent = player.total;
+                tdTotal.className = 'total-cell';
+                tdTotal.style.fontWeight = 'bold';
+                tdTotal.title = 'Усяго гульняў';
+                tr.appendChild(tdTotal);
+
+                // Win percentage
+                const tdPct = document.createElement('td');
+                tdPct.textContent = player.winPct.toFixed(1) + '%';
+                tdPct.className = 'percentage-cell';
+                tdPct.title = 'Адсотак перамог';
+                tr.appendChild(tdPct);
+
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // Role code to Belarusian name mapping
+        const roleNames = {
+            'M': 'Мірны жыхар',
+            'Sh': 'Шэрыф',
+            'Mf': 'Мафія',
+            'D': 'Дон'
+        };
+
+        // Autocomplete state
+        let autocompleteSelectedIndex = -1;
+        let autocompleteItems = [];
+        let autocompleteSelectedIndex2 = -1;
+        let autocompleteItems2 = [];
+        
+        // Comparison mode state
+        let comparisonMode = false;
+        let selectedPlayer1 = null;
+        let selectedPlayer2 = null;
+
+        // Navigation Control Functions
+        function showPlayerStatsView() {
+            // Hide table view
+            document.getElementById('tableWrapper').style.display = 'none';
+            
+            // Show player stats page
+            document.getElementById('playerStatsPage').classList.add('show');
+            
+            // Update header
+            const header = document.getElementById('header');
+            const backButton = document.getElementById('backButton');
+            const headerTitle = document.getElementById('headerTitle');
+            const headerSubtitle = document.getElementById('headerSubtitle');
+            
+            header.classList.add('player-view');
+            backButton.classList.add('show');
+            headerSubtitle.style.display = 'none';
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        function showMainTableView() {
+            // Show table view
+            document.getElementById('tableWrapper').style.display = 'block';
+            
+            // Hide player stats page
+            document.getElementById('playerStatsPage').classList.remove('show');
+            
+            // Update header
+            const header = document.getElementById('header');
+            const backButton = document.getElementById('backButton');
+            const headerTitle = document.getElementById('headerTitle');
+            const headerSubtitle = document.getElementById('headerSubtitle');
+            
+            header.classList.remove('player-view');
+            backButton.classList.remove('show');
+            headerTitle.textContent = 'МАФІЯ';
+            headerSubtitle.style.display = 'block';
+            
+            closeAutocomplete();
+            closeAutocomplete2();
+            
+            // Reset comparison mode
+            comparisonMode = false;
+            selectedPlayer1 = null;
+            selectedPlayer2 = null;
+            document.getElementById('secondarySearchContainer').classList.remove('show');
+            document.getElementById('closeCompareBtn').style.display = 'none';
+            document.getElementById('compareBtn').style.display = 'block';
+            document.getElementById('playerSearchInput2').value = '';
+            document.getElementById('playerSearchInput').value = '';
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        function closeAutocomplete() {
+            const dropdown = document.getElementById('autocompleteDropdown');
+            dropdown.classList.remove('show');
+            autocompleteSelectedIndex = -1;
+            autocompleteItems = [];
+        }
+
+        function closeAutocomplete2() {
+            const dropdown = document.getElementById('autocompleteDropdown2');
+            dropdown.classList.remove('show');
+            autocompleteSelectedIndex2 = -1;
+            autocompleteItems2 = [];
+        }
+
+        // Filter players by search term
+        function filterPlayers(searchTerm, excludePlayer = null) {
+            let filtered = playerData;
+            if (excludePlayer) {
+                filtered = filtered.filter(player => player.name !== excludePlayer);
+            }
+            if (!searchTerm) return filtered;
+            const term = searchTerm.toLowerCase();
+            return filtered.filter(player => 
+                player.name.toLowerCase().includes(term)
+            );
+        }
+
+        // Render autocomplete dropdown
+        function renderAutocomplete(filteredPlayers, isSecondary = false) {
+            const dropdownId = isSecondary ? 'autocompleteDropdown2' : 'autocompleteDropdown';
+            const dropdown = document.getElementById(dropdownId);
+            const selectedIndex = isSecondary ? autocompleteSelectedIndex2 : autocompleteSelectedIndex;
+            
+            if (filteredPlayers.length === 0) {
+                dropdown.innerHTML = '<div class="autocomplete-item no-results">Нічога не знойдзена</div>';
+                dropdown.classList.add('show');
+                return;
+            }
+
+            if (isSecondary) {
+                autocompleteItems2 = filteredPlayers;
+            } else {
+                autocompleteItems = filteredPlayers;
+            }
+
+            const items = filteredPlayers.map((player, index) => {
+                const className = index === selectedIndex ? 'autocomplete-item selected' : 'autocomplete-item';
+                return `<div class="${className}" data-index="${index}" data-name="${player.name}">${player.name}</div>`;
+            }).join('');
+
+            dropdown.innerHTML = items;
+            dropdown.classList.add('show');
+
+            // Add click handlers to items
+            dropdown.querySelectorAll('.autocomplete-item:not(.no-results)').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const playerName = e.target.dataset.name;
+                    if (isSecondary) {
+                        selectPlayer2(playerName);
+                    } else {
+                        selectPlayer(playerName);
+                    }
+                });
+            });
+
+            // Scroll selected item into view
+            if (selectedIndex >= 0) {
+                const selectedItem = dropdown.querySelector('.autocomplete-item.selected');
+                if (selectedItem) {
+                    selectedItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                }
+            }
+        }
+
+        // Select a player from autocomplete
+        function selectPlayer(playerName) {
+            const input = document.getElementById('playerSearchInput');
+            input.value = playerName;
+            closeAutocomplete();
+            selectedPlayer1 = playerName;
+            
+            if (comparisonMode && selectedPlayer2) {
+                showComparisonStats(selectedPlayer1, selectedPlayer2);
+            } else if (!comparisonMode) {
+                showPlayerStats(playerName);
+            }
+        }
+
+        // Select second player from autocomplete
+        function selectPlayer2(playerName) {
+            const input = document.getElementById('playerSearchInput2');
+            input.value = playerName;
+            closeAutocomplete2();
+            selectedPlayer2 = playerName;
+            
+            if (selectedPlayer1) {
+                showComparisonStats(selectedPlayer1, selectedPlayer2);
+            }
+        }
+
+        // Handle autocomplete input for first player
+        const playerSearchInput = document.getElementById('playerSearchInput');
+        playerSearchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.trim();
+            if (searchTerm.length === 0) {
+                closeAutocomplete();
+                return;
+            }
+            // Exclude player 2 if in comparison mode
+            const excludePlayer = comparisonMode ? selectedPlayer2 : null;
+            const filtered = filterPlayers(searchTerm, excludePlayer);
+            renderAutocomplete(filtered, false);
+        });
+
+        // Handle autocomplete input for second player
+        const playerSearchInput2 = document.getElementById('playerSearchInput2');
+        playerSearchInput2.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.trim();
+            if (searchTerm.length === 0) {
+                closeAutocomplete2();
+                return;
+            }
+            const filtered = filterPlayers(searchTerm, selectedPlayer1);
+            renderAutocomplete(filtered, true);
+        });
+
+        // Handle keyboard navigation in first autocomplete
+        playerSearchInput.addEventListener('keydown', (e) => {
+            const dropdown = document.getElementById('autocompleteDropdown');
+            
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                if (dropdown.classList.contains('show')) {
+                    closeAutocomplete();
+                } else {
+                    showMainTableView();
+                }
+                return;
+            }
+
+            if (!dropdown.classList.contains('show')) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                autocompleteSelectedIndex = Math.min(autocompleteSelectedIndex + 1, autocompleteItems.length - 1);
+                renderAutocomplete(autocompleteItems, false);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                autocompleteSelectedIndex = Math.max(autocompleteSelectedIndex - 1, -1);
+                renderAutocomplete(autocompleteItems, false);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (autocompleteSelectedIndex >= 0 && autocompleteItems[autocompleteSelectedIndex]) {
+                    selectPlayer(autocompleteItems[autocompleteSelectedIndex].name);
+                } else if (autocompleteItems.length === 1) {
+                    selectPlayer(autocompleteItems[0].name);
+                }
+            }
+        });
+
+        // Handle keyboard navigation in second autocomplete
+        playerSearchInput2.addEventListener('keydown', (e) => {
+            const dropdown = document.getElementById('autocompleteDropdown2');
+            
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                if (dropdown.classList.contains('show')) {
+                    closeAutocomplete2();
+                }
+                return;
+            }
+
+            if (!dropdown.classList.contains('show')) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                autocompleteSelectedIndex2 = Math.min(autocompleteSelectedIndex2 + 1, autocompleteItems2.length - 1);
+                renderAutocomplete(autocompleteItems2, true);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                autocompleteSelectedIndex2 = Math.max(autocompleteSelectedIndex2 - 1, -1);
+                renderAutocomplete(autocompleteItems2, true);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (autocompleteSelectedIndex2 >= 0 && autocompleteItems2[autocompleteSelectedIndex2]) {
+                    selectPlayer2(autocompleteItems2[autocompleteSelectedIndex2].name);
+                } else if (autocompleteItems2.length === 1) {
+                    selectPlayer2(autocompleteItems2[0].name);
+                }
+            }
+        });
+
+        // Close autocomplete when clicking outside
+        document.addEventListener('click', (e) => {
+            const searchContainers = document.querySelectorAll('.player-search-container');
+            let clickedInside = false;
+            searchContainers.forEach(container => {
+                if (container.contains(e.target)) {
+                    clickedInside = true;
+                }
+            });
+            if (!clickedInside) {
+                closeAutocomplete();
+                closeAutocomplete2();
+            }
+        });
+
+        // Compare button handler
+        document.getElementById('compareBtn').addEventListener('click', () => {
+            comparisonMode = true;
+            document.getElementById('secondarySearchContainer').classList.add('show');
+            document.getElementById('closeCompareBtn').style.display = 'flex';
+            document.getElementById('compareBtn').style.display = 'none';
+            
+            // Focus on second input
+            setTimeout(() => {
+                document.getElementById('playerSearchInput2').focus();
+            }, 100);
+        });
+
+        // Close compare button handler
+        document.getElementById('closeCompareBtn').addEventListener('click', () => {
+            comparisonMode = false;
+            selectedPlayer2 = null;
+            document.getElementById('secondarySearchContainer').classList.remove('show');
+            document.getElementById('closeCompareBtn').style.display = 'none';
+            document.getElementById('compareBtn').style.display = 'block';
+            document.getElementById('playerSearchInput2').value = '';
+            closeAutocomplete2();
+            
+            // Reload single player view (already shown)
+            if (selectedPlayer1) {
+                showPlayerStats(selectedPlayer1);
+            }
+        });
+
+        // Back button handler
+        document.getElementById('backButton').addEventListener('click', showMainTableView);
+
+        // ESC key to go back (when not in input field)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const playerStatsPage = document.getElementById('playerStatsPage');
+                if (playerStatsPage.classList.contains('show') && 
+                    document.activeElement !== playerSearchInput && 
+                    document.activeElement !== playerSearchInput2) {
+                    e.preventDefault();
+                    showMainTableView();
+                }
+            }
+        });
+
+        // Calculate summary statistics from game data
+        function calculatePlayerStats(games) {
+            const stats = {
+                M: { wins: 0, losses: 0 },
+                Sh: { wins: 0, losses: 0 },
+                Mf: { wins: 0, losses: 0 },
+                D: { wins: 0, losses: 0 }
+            };
+
+            games.forEach(game => {
+                const role = game.role_code;
+                if (stats[role]) {
+                    if (game.player_won) {
+                        stats[role].wins++;
+                    } else {
+                        stats[role].losses++;
+                    }
+                }
+            });
+
+            // Calculate totals
+            const redWins = stats.M.wins + stats.Sh.wins;
+            const redLosses = stats.M.losses + stats.Sh.losses;
+            const blackWins = stats.Mf.wins + stats.D.wins;
+            const blackLosses = stats.Mf.losses + stats.D.losses;
+            const totalWins = redWins + blackWins;
+            const totalLosses = redLosses + blackLosses;
+            const totalGames = totalWins + totalLosses;
+            const winPct = totalGames > 0 ? (totalWins / totalGames * 100) : 0;
+
+            return {
+                byRole: stats,
+                red: { wins: redWins, losses: redLosses },
+                black: { wins: blackWins, losses: blackLosses },
+                total: { wins: totalWins, losses: totalLosses, games: totalGames, winPct }
+            };
+        }
+
+        // Fetch player game data from Supabase
+        async function fetchPlayerGames(playerName) {
+            try {
+                const apiUrl = `${SUPABASE_URL}/rest/v1/player_games_view?player_name=eq.${encodeURIComponent(playerName)}&order=game_id.desc`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Памылка загрузкі даных. Статус: ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching player games:', error);
+                throw error;
+            }
+        }
+
+        // Calculate head-to-head statistics
+        function calculateHeadToHeadStats(games1, games2) {
+            // Find common games
+            const player1GameMap = {};
+            games1.forEach(game => {
+                player1GameMap[game.game_id] = game;
+            });
+
+            const commonGames = [];
+            games2.forEach(game => {
+                if (player1GameMap[game.game_id]) {
+                    commonGames.push({
+                        player1: player1GameMap[game.game_id],
+                        player2: game
+                    });
+                }
+            });
+
+            // Calculate stats for each combination
+            const stats = {
+                redRed: { wins: 0, losses: 0 },      // Both red team
+                redBlack: { wins: 0, losses: 0 },    // P1 red, P2 black
+                blackRed: { wins: 0, losses: 0 },    // P1 black, P2 red
+                blackBlack: { wins: 0, losses: 0 }   // Both black team
+            };
+
+            commonGames.forEach(({ player1, player2 }) => {
+                const p1IsRed = player1.role_code === 'M' || player1.role_code === 'Sh';
+                const p2IsRed = player2.role_code === 'M' || player2.role_code === 'Sh';
+                const redWon = !player1.mafia_won;
+
+                if (p1IsRed && p2IsRed) {
+                    if (redWon) stats.redRed.wins++;
+                    else stats.redRed.losses++;
+                } else if (p1IsRed && !p2IsRed) {
+                    if (redWon) stats.redBlack.wins++;
+                    else stats.redBlack.losses++;
+                } else if (!p1IsRed && p2IsRed) {
+                    if (redWon) stats.blackRed.wins++;
+                    else stats.blackRed.losses++;
+                } else {
+                    if (redWon) stats.blackBlack.losses++;
+                    else stats.blackBlack.wins++;
+                }
+            });
+
+            return stats;
+        }
+
+        // Helper function for Belarusian plural forms
+        function getWinsForm(n) {
+            const mod10 = n % 10;
+            const mod100 = n % 100;
+            
+            if (mod100 >= 11 && mod100 <= 14) {
+                return 'перамог';
+            }
+            if (mod10 === 1) {
+                return 'перамога';
+            }
+            if (mod10 >= 2 && mod10 <= 4) {
+                return 'перамогі';
+            }
+            return 'перамог';
+        }
+
+        function getGamesForm(m) {
+            const mod10 = m % 10;
+            const mod100 = m % 100;
+            
+            if (mod100 >= 11 && mod100 <= 14) {
+                return 'гульнях';
+            }
+            if (mod10 === 1) {
+                return 'гульні';
+            }
+            return 'гульнях';
+        }
+
+        // Render stat bar
+        function renderStatBar(wins, losses, winColorClass, rowIndex, tooltipData, useGrey = false, customColors = null) {
+            const total = wins + losses;
+            if (total === 0) {
+                return '<div class="stat-bar-container"><div class="stat-bar-segment" style="width: 100%; background: #95a5a6;">0</div></div>';
+            }
+
+            const winPercent = (wins / total * 100);
+            const lossPercent = (losses / total * 100);
+            
+            // Use custom colors for specific summary rows, grey for default summary, or normal colors
+            let finalWinColorClass, finalLossColorClass, winColor, lossColor;
+            if (customColors) {
+                finalWinColorClass = customColors.win;
+                finalLossColorClass = customColors.loss;
+                winColor = customColors.winColor || 'custom';
+                lossColor = customColors.lossColor || 'custom';
+            } else if (useGrey) {
+                finalWinColorClass = 'stat-bar-grey';
+                finalLossColorClass = 'stat-bar-grey';
+                winColor = 'grey';
+                lossColor = 'grey';
+            } else {
+                finalWinColorClass = winColorClass;
+                finalLossColorClass = winColorClass === 'stat-bar-red' ? 'stat-bar-black' : 'stat-bar-red';
+                winColor = winColorClass === 'stat-bar-red' ? 'red' : 'black';
+                lossColor = finalLossColorClass === 'stat-bar-red' ? 'red' : 'black';
+            }
+
+            // Generate tooltip text
+            let tooltipText = '';
+            if (tooltipData) {
+                const { rowType, player1, player2 } = tooltipData;
+                const winsForm = getWinsForm(wins);
+                const gamesForm = getGamesForm(total);
+                const winPct = winPercent.toFixed(1);
+                const lossPct = lossPercent.toFixed(1);
+                
+                if (rowType === 'both-red') {
+                    tooltipText = `Разам за чырвоных: ${wins} ${winsForm} у ${total} ${gamesForm} (${winPct}%)`;
+                } else if (rowType === 'p1-red-p2-black') {
+                    const lossesForm = getWinsForm(losses);
+                    tooltipText = `${player1} за чырвоных: ${wins} ${winsForm} (${winPct}%) vs ${player2} за чорных: ${losses} ${lossesForm} (${lossPct}%) у ${total} ${gamesForm}`;
+                } else if (rowType === 'p1-black-p2-red') {
+                    const lossesForm = getWinsForm(losses);
+                    tooltipText = `${player1} за чорных: ${wins} ${winsForm} (${winPct}%) vs ${player2} за чырвоных: ${losses} ${lossesForm} (${lossPct}%) у ${total} ${gamesForm}`;
+                } else if (rowType === 'both-black') {
+                    tooltipText = `Разам за чорных: ${wins} ${winsForm} у ${total} ${gamesForm} (${winPct}%)`;
+                } else if (rowType === 'summary-same') {
+                    tooltipText = `Агулам за адзін колер: ${wins} ${winsForm} у ${total} ${gamesForm} (${winPct}%)`;
+                } else if (rowType === 'summary-diff') {
+                    const lossesForm = getWinsForm(losses);
+                    tooltipText = `Агулам за розныя колеры: ${player1}: ${wins} ${winsForm} (${winPct}%) vs ${player2}: ${losses} ${lossesForm} (${lossPct}%) у ${total} ${gamesForm}`;
+                }
+            }
+
+            const titleAttr = tooltipText ? ` title="${tooltipText}"` : '';
+
+            // Hide segments with 0 value
+            let segments = '';
+            let containerClass = 'stat-bar-container';
+            
+            if (wins > 0 && losses > 0) {
+                // Add connector class for summary rows with custom colors
+                if (customColors) {
+                    containerClass += ' with-connector';
+                }
+                segments = `
+                    <div class="stat-bar-segment ${finalWinColorClass}" style="width: ${winPercent}%;" data-color="${winColor}" data-row="${rowIndex}">${wins}</div>
+                    <div class="stat-bar-segment ${finalLossColorClass}" style="width: ${lossPercent}%;" data-color="${lossColor}" data-row="${rowIndex}">${losses}</div>
+                `;
+            } else if (wins > 0) {
+                segments = `<div class="stat-bar-segment ${finalWinColorClass}" style="width: 100%;" data-color="${winColor}" data-row="${rowIndex}">${wins}</div>`;
+            } else if (losses > 0) {
+                segments = `<div class="stat-bar-segment ${finalLossColorClass}" style="width: 100%;" data-color="${lossColor}" data-row="${rowIndex}">${losses}</div>`;
+            }
+
+            return `
+                <div class="${containerClass}"${titleAttr}>
+                    ${segments}
+                </div>
+            `;
+        }
+
+        // Render personal stats table
+        function renderPersonalStatsTable(h2hStats, player1Name, player2Name) {
+            // Calculate summary stats
+            const sameColorWins = h2hStats.redRed.wins + h2hStats.blackBlack.wins;
+            const sameColorLosses = h2hStats.redRed.losses + h2hStats.blackBlack.losses;
+            const sameColorTotal = sameColorWins + sameColorLosses;
+            
+            const diffColorWins = h2hStats.redBlack.wins + h2hStats.blackRed.losses;
+            const diffColorLosses = h2hStats.redBlack.losses + h2hStats.blackRed.wins;
+            const diffColorTotal = diffColorWins + diffColorLosses;
+            
+            // Determine bar color for same color (red team wins if redRed has more wins)
+            const sameColorBarClass = 'stat-bar-red';
+            
+            // For different colors, we need to determine which team won more
+            // diffColorWins represents red team wins (redBlack.wins = P1 red won, blackRed.losses = P2 red won)
+            const diffColorBarClass = 'stat-bar-red';
+            
+            const sameColorWinsForm = getWinsForm(sameColorWins);
+            const sameColorGamesForm = getGamesForm(sameColorTotal);
+            const sameColorPct = sameColorTotal > 0 ? (sameColorWins / sameColorTotal * 100).toFixed(1) : '0.0';
+            const sameColorTooltip = sameColorTotal > 0 ? `Агулам за адзін колер: ${sameColorWins} ${sameColorWinsForm} у ${sameColorTotal} ${sameColorGamesForm} (${sameColorPct}%)` : '';
+            
+            const diffColorWinsForm = getWinsForm(diffColorWins);
+            const diffColorGamesForm = getGamesForm(diffColorTotal);
+            const diffColorPct = diffColorTotal > 0 ? (diffColorWins / diffColorTotal * 100).toFixed(1) : '0.0';
+            const diffColorTooltip = diffColorTotal > 0 ? `Агулам за розныя колеры: ${diffColorWins} ${diffColorWinsForm} у ${diffColorTotal} ${diffColorGamesForm} (${diffColorPct}%)` : '';
+
+            return `
+                <table class="personal-stats-table" id="personalStatsTable">
+                    <thead>
+                        <tr>
+                            <th>${player1Name}</th>
+                            <th>${player2Name}</th>
+                            <th>Статыстыка</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr data-row="0">
+                            <td data-color="red"><span class="color-indicator color-red"></span></td>
+                            <td data-color="red"><span class="color-indicator color-red"></span></td>
+                            <td>${renderStatBar(h2hStats.redRed.wins, h2hStats.redRed.losses, 'stat-bar-red', 0, {
+                                rowType: 'both-red',
+                                player1: player1Name,
+                                player2: player2Name
+                            })}</td>
+                        </tr>
+                        <tr data-row="1">
+                            <td data-color="black"><span class="color-indicator color-black"></span></td>
+                            <td data-color="black"><span class="color-indicator color-black"></span></td>
+                            <td>${renderStatBar(h2hStats.blackBlack.wins, h2hStats.blackBlack.losses, 'stat-bar-black', 1, {
+                                rowType: 'both-black',
+                                player1: player1Name,
+                                player2: player2Name
+                            })}</td>
+                        </tr>
+                        <tr class="summary-row" data-row="summary-same">
+                            <td colspan="2">Агулам за адзін колер</td>
+                            <td>${renderStatBar(sameColorWins, sameColorLosses, sameColorBarClass, 'summary-same', {
+                                rowType: 'summary-same',
+                                player1: player1Name,
+                                player2: player2Name
+                            }, false, {
+                                win: 'stat-bar-gold',
+                                loss: 'stat-bar-silver',
+                                winColor: 'gold',
+                                lossColor: 'silver'
+                            })}</td>
+                        </tr>
+                        <tr data-row="2">
+                            <td data-color="red"><span class="color-indicator color-red"></span></td>
+                            <td data-color="black"><span class="color-indicator color-black"></span></td>
+                            <td>${renderStatBar(h2hStats.redBlack.wins, h2hStats.redBlack.losses, 'stat-bar-red', 2, {
+                                rowType: 'p1-red-p2-black',
+                                player1: player1Name,
+                                player2: player2Name
+                            })}</td>
+                        </tr>
+                        <tr data-row="3">
+                            <td data-color="black"><span class="color-indicator color-black"></span></td>
+                            <td data-color="red"><span class="color-indicator color-red"></span></td>
+                            <td>${renderStatBar(h2hStats.blackRed.losses, h2hStats.blackRed.wins, 'stat-bar-black', 3, {
+                                rowType: 'p1-black-p2-red',
+                                player1: player1Name,
+                                player2: player2Name
+                            })}</td>
+                        </tr>
+                        <tr class="summary-row" data-row="summary-diff">
+                            <td colspan="2">Агулам за розныя колеры</td>
+                            <td>${renderStatBar(diffColorWins, diffColorLosses, diffColorBarClass, 'summary-diff', {
+                                rowType: 'summary-diff',
+                                player1: player1Name,
+                                player2: player2Name
+                            }, false, {
+                                win: 'stat-bar-green',
+                                loss: 'stat-bar-blue',
+                                winColor: 'green',
+                                lossColor: 'blue'
+                            })}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Setup hover handlers for personal stats table
+        function setupPersonalStatsHover() {
+            const table = document.getElementById('personalStatsTable');
+            if (!table) return;
+
+            const segments = table.querySelectorAll('.stat-bar-segment');
+            
+            segments.forEach(segment => {
+                segment.addEventListener('mouseenter', (e) => {
+                    const color = e.target.dataset.color;
+                    const rowIndex = e.target.dataset.row;
+                    
+                    // Highlight cells with matching color in the same row
+                    const row = table.querySelector(`tr[data-row="${rowIndex}"]`);
+                    if (row) {
+                        const cells = row.querySelectorAll(`td[data-color="${color}"]`);
+                        cells.forEach(cell => cell.classList.add('highlight'));
+                    }
+                });
+
+                segment.addEventListener('mouseleave', (e) => {
+                    // Remove all highlights
+                    const highlightedCells = table.querySelectorAll('td.highlight');
+                    highlightedCells.forEach(cell => cell.classList.remove('highlight'));
+                });
+            });
+        }
+
+        // Render summary stats table
+        function renderSummaryTable(stats) {
+            const calcPct = (wins, losses) => {
+                const total = wins + losses;
+                return total > 0 ? (wins / total * 100).toFixed(1) : '0.0';
+            };
+
+            return `
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Роля</th>
+                            <th>Перамогі</th>
+                            <th>Паразы</th>
+                            <th>%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Мірны жыхар</td>
+                            <td class="win-cell">${stats.byRole.M.wins}</td>
+                            <td class="loss-cell">${stats.byRole.M.losses}</td>
+                            <td class="percentage-cell">${calcPct(stats.byRole.M.wins, stats.byRole.M.losses)}%</td>
+                        </tr>
+                        <tr>
+                            <td>Шэрыф</td>
+                            <td class="win-cell">${stats.byRole.Sh.wins}</td>
+                            <td class="loss-cell">${stats.byRole.Sh.losses}</td>
+                            <td class="percentage-cell">${calcPct(stats.byRole.Sh.wins, stats.byRole.Sh.losses)}%</td>
+                        </tr>
+                        <tr class="team-row">
+                            <td>Агулам за чырвоных</td>
+                            <td class="win-cell">${stats.red.wins}</td>
+                            <td class="loss-cell">${stats.red.losses}</td>
+                            <td class="percentage-cell">${calcPct(stats.red.wins, stats.red.losses)}%</td>
+                        </tr>
+                        <tr>
+                            <td>Мафія</td>
+                            <td class="win-cell">${stats.byRole.Mf.wins}</td>
+                            <td class="loss-cell">${stats.byRole.Mf.losses}</td>
+                            <td class="percentage-cell">${calcPct(stats.byRole.Mf.wins, stats.byRole.Mf.losses)}%</td>
+                        </tr>
+                        <tr>
+                            <td>Дон</td>
+                            <td class="win-cell">${stats.byRole.D.wins}</td>
+                            <td class="loss-cell">${stats.byRole.D.losses}</td>
+                            <td class="percentage-cell">${calcPct(stats.byRole.D.wins, stats.byRole.D.losses)}%</td>
+                        </tr>
+                        <tr class="team-row">
+                            <td>Агулам за чорных</td>
+                            <td class="win-cell">${stats.black.wins}</td>
+                            <td class="loss-cell">${stats.black.losses}</td>
+                            <td class="percentage-cell">${calcPct(stats.black.wins, stats.black.losses)}%</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>Усяго</td>
+                            <td class="win-cell">${stats.total.wins}</td>
+                            <td class="loss-cell">${stats.total.losses}</td>
+                            <td class="percentage-cell">${stats.total.winPct.toFixed(1)}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Render comparison stats table
+        function renderComparisonTable(stats1, stats2, player1Name, player2Name) {
+            const calcPct = (wins, losses) => {
+                const total = wins + losses;
+                return total > 0 ? (wins / total * 100) : 0;
+            };
+
+            const addStar = (thisPct, otherPct, value) => {
+                if (thisPct > otherPct && thisPct > 0) {
+                    return `${value}% ⭐`;
+                }
+                return `${value}%`;
+            };
+
+            // Calculate percentages for each row
+            const mPct1 = calcPct(stats1.byRole.M.wins, stats1.byRole.M.losses);
+            const mPct2 = calcPct(stats2.byRole.M.wins, stats2.byRole.M.losses);
+            
+            const shPct1 = calcPct(stats1.byRole.Sh.wins, stats1.byRole.Sh.losses);
+            const shPct2 = calcPct(stats2.byRole.Sh.wins, stats2.byRole.Sh.losses);
+            
+            const redPct1 = calcPct(stats1.red.wins, stats1.red.losses);
+            const redPct2 = calcPct(stats2.red.wins, stats2.red.losses);
+            
+            const mfPct1 = calcPct(stats1.byRole.Mf.wins, stats1.byRole.Mf.losses);
+            const mfPct2 = calcPct(stats2.byRole.Mf.wins, stats2.byRole.Mf.losses);
+            
+            const dPct1 = calcPct(stats1.byRole.D.wins, stats1.byRole.D.losses);
+            const dPct2 = calcPct(stats2.byRole.D.wins, stats2.byRole.D.losses);
+            
+            const blackPct1 = calcPct(stats1.black.wins, stats1.black.losses);
+            const blackPct2 = calcPct(stats2.black.wins, stats2.black.losses);
+            
+            const totalPct1 = stats1.total.winPct;
+            const totalPct2 = stats2.total.winPct;
+
+            return `
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" style="text-align: center;">Роля</th>
+                            <th colspan="3" class="player-column-header">${player1Name}</th>
+                            <th colspan="3" class="player-column-header">${player2Name}</th>
+                        </tr>
+                        <tr>
+                            <th>Перамогі</th>
+                            <th>Паразы</th>
+                            <th>%</th>
+                            <th>Перамогі</th>
+                            <th>Паразы</th>
+                            <th>%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Мірны жыхар</td>
+                            <td class="win-cell">${stats1.byRole.M.wins}</td>
+                            <td class="loss-cell">${stats1.byRole.M.losses}</td>
+                            <td class="percentage-cell">${addStar(mPct1, mPct2, mPct1.toFixed(1))}</td>
+                            <td class="win-cell">${stats2.byRole.M.wins}</td>
+                            <td class="loss-cell">${stats2.byRole.M.losses}</td>
+                            <td class="percentage-cell">${addStar(mPct2, mPct1, mPct2.toFixed(1))}</td>
+                        </tr>
+                        <tr>
+                            <td>Шэрыф</td>
+                            <td class="win-cell">${stats1.byRole.Sh.wins}</td>
+                            <td class="loss-cell">${stats1.byRole.Sh.losses}</td>
+                            <td class="percentage-cell">${addStar(shPct1, shPct2, shPct1.toFixed(1))}</td>
+                            <td class="win-cell">${stats2.byRole.Sh.wins}</td>
+                            <td class="loss-cell">${stats2.byRole.Sh.losses}</td>
+                            <td class="percentage-cell">${addStar(shPct2, shPct1, shPct2.toFixed(1))}</td>
+                        </tr>
+                        <tr class="team-row">
+                            <td>Агулам за чырвоных</td>
+                            <td class="win-cell">${stats1.red.wins}</td>
+                            <td class="loss-cell">${stats1.red.losses}</td>
+                            <td class="percentage-cell">${addStar(redPct1, redPct2, redPct1.toFixed(1))}</td>
+                            <td class="win-cell">${stats2.red.wins}</td>
+                            <td class="loss-cell">${stats2.red.losses}</td>
+                            <td class="percentage-cell">${addStar(redPct2, redPct1, redPct2.toFixed(1))}</td>
+                        </tr>
+                        <tr>
+                            <td>Мафія</td>
+                            <td class="win-cell">${stats1.byRole.Mf.wins}</td>
+                            <td class="loss-cell">${stats1.byRole.Mf.losses}</td>
+                            <td class="percentage-cell">${addStar(mfPct1, mfPct2, mfPct1.toFixed(1))}</td>
+                            <td class="win-cell">${stats2.byRole.Mf.wins}</td>
+                            <td class="loss-cell">${stats2.byRole.Mf.losses}</td>
+                            <td class="percentage-cell">${addStar(mfPct2, mfPct1, mfPct2.toFixed(1))}</td>
+                        </tr>
+                        <tr>
+                            <td>Дон</td>
+                            <td class="win-cell">${stats1.byRole.D.wins}</td>
+                            <td class="loss-cell">${stats1.byRole.D.losses}</td>
+                            <td class="percentage-cell">${addStar(dPct1, dPct2, dPct1.toFixed(1))}</td>
+                            <td class="win-cell">${stats2.byRole.D.wins}</td>
+                            <td class="loss-cell">${stats2.byRole.D.losses}</td>
+                            <td class="percentage-cell">${addStar(dPct2, dPct1, dPct2.toFixed(1))}</td>
+                        </tr>
+                        <tr class="team-row">
+                            <td>Агулам за чорных</td>
+                            <td class="win-cell">${stats1.black.wins}</td>
+                            <td class="loss-cell">${stats1.black.losses}</td>
+                            <td class="percentage-cell">${addStar(blackPct1, blackPct2, blackPct1.toFixed(1))}</td>
+                            <td class="win-cell">${stats2.black.wins}</td>
+                            <td class="loss-cell">${stats2.black.losses}</td>
+                            <td class="percentage-cell">${addStar(blackPct2, blackPct1, blackPct2.toFixed(1))}</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>Усяго</td>
+                            <td class="win-cell">${stats1.total.wins}</td>
+                            <td class="loss-cell">${stats1.total.losses}</td>
+                            <td class="percentage-cell">${addStar(totalPct1, totalPct2, totalPct1.toFixed(1))}</td>
+                            <td class="win-cell">${stats2.total.wins}</td>
+                            <td class="loss-cell">${stats2.total.losses}</td>
+                            <td class="percentage-cell">${addStar(totalPct2, totalPct1, totalPct2.toFixed(1))}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Render games list table
+        function renderGamesTable(games) {
+            const formatDate = (dateStr) => {
+                if (!dateStr) return '';
+                const date = new Date(dateStr);
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}.${month}.${year}`;
+            };
+
+            const rows = games.map(game => `
+                <tr>
+                    <td>${formatDate(game.game_date)}</td>
+                    <td>${roleNames[game.role_code] || game.role_code}</td>
+                    <td class="${game.player_won ? 'win-badge' : 'loss-badge'}">
+                        ${game.player_won ? 'Перамога' : 'Параза'}
+                    </td>
+                </tr>
+            `).join('');
+
+            return `
+                <table class="games-table">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Роля</th>
+                            <th>Вынік</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Show player stats page
+        async function showPlayerStats(playerName) {
+            // Set player name in input field and update selected player
+            document.getElementById('playerSearchInput').value = playerName;
+            selectedPlayer1 = playerName;
+            closeAutocomplete();
+            
+            // Update header title with player name
+            document.getElementById('headerTitle').textContent = playerName;
+            
+            // Show player stats page with loading state
+            const playerStatsBody = document.getElementById('playerStatsBody');
+            playerStatsBody.innerHTML = `
+                <div class="player-stats-loading">
+                    <div class="spinner"></div>
+                    <p>Загрузка статыстыкі...</p>
+                </div>
+            `;
+            showPlayerStatsView();
+
+            try {
+                // Fetch player games
+                const games = await fetchPlayerGames(playerName);
+
+                if (!games || games.length === 0) {
+                    playerStatsBody.innerHTML = `
+                        <div class="player-stats-loading">
+                            <p>Няма даных для гульца</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Calculate stats
+                const stats = calculatePlayerStats(games);
+
+                // Render player stats content
+                playerStatsBody.innerHTML = `
+                    <div class="stats-section">
+                        <h3>Агульная статыстыка</h3>
+                        ${renderSummaryTable(stats)}
+                    </div>
+                    <div class="stats-section">
+                        <h3>Гісторыя гульняў</h3>
+                        ${renderGamesTable(games)}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading player stats:', error);
+                playerStatsBody.innerHTML = `
+                    <div class="player-stats-loading">
+                        <p style="color: #c0392b;">Памылка загрузкі: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Show comparison stats for two players
+        async function showComparisonStats(player1Name, player2Name) {
+            // Update header title with both player names
+            document.getElementById('headerTitle').textContent = `${player1Name} vs ${player2Name}`;
+            
+            const playerStatsBody = document.getElementById('playerStatsBody');
+            playerStatsBody.innerHTML = `
+                <div class="player-stats-loading">
+                    <div class="spinner"></div>
+                    <p>Загрузка параўнання...</p>
+                </div>
+            `;
+
+            try {
+                // Fetch both players' games
+                const [games1, games2] = await Promise.all([
+                    fetchPlayerGames(player1Name),
+                    fetchPlayerGames(player2Name)
+                ]);
+
+                if (!games1 || games1.length === 0) {
+                    playerStatsBody.innerHTML = `
+                        <div class="player-stats-loading">
+                            <p>Няма даных для гульца ${player1Name}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (!games2 || games2.length === 0) {
+                    playerStatsBody.innerHTML = `
+                        <div class="player-stats-loading">
+                            <p>Няма даных для гульца ${player2Name}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Calculate stats for both players
+                const stats1 = calculatePlayerStats(games1);
+                const stats2 = calculatePlayerStats(games2);
+
+                // Calculate head-to-head stats
+                const h2hStats = calculateHeadToHeadStats(games1, games2);
+
+                // Render comparison content
+                playerStatsBody.innerHTML = `
+                    <div class="stats-section">
+                        <h3>Агульная статыстыка</h3>
+                        ${renderComparisonTable(stats1, stats2, player1Name, player2Name)}
+                    </div>
+                    <div class="stats-section">
+                        <h3>Персанальная статыстыка</h3>
+                        ${renderPersonalStatsTable(h2hStats, player1Name, player2Name)}
+                    </div>
+                `;
+
+                // Setup hover handlers after content is rendered
+                setupPersonalStatsHover();
+            } catch (error) {
+                console.error('Error loading comparison stats:', error);
+                playerStatsBody.innerHTML = `
+                    <div class="player-stats-loading">
+                        <p style="color: #c0392b;">Памылка загрузкі: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadData() {
+            showStatus('Загрузка даных з Supabase...', 'info');
+
+            try {
+                const apiUrl = `${SUPABASE_URL}/rest/v1/player_stats?select=*`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Памылка загрузкі даных. Статус: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (!data || data.length === 0) {
+                    throw new Error('Няма даных у базе. Запусціце import_games.py для загрузкі даных.');
+                }
+
+                showStatus('Апрацоўка даных...', 'info');
+
+                // Map database fields to frontend format
+                playerData = data.map(dbRow => mapSupabaseData(dbRow));
+
+                // Sort by total games descending by default
+                currentSort = { column: 'total', ascending: true };
+                sortData('total');
+
+                showStatus(`Паспяхова загружана: ${playerData.length} гульцоў`, 'success');
+                document.getElementById('tableWrapper').style.display = 'block';
+
+                // Add click handlers to column headers
+                document.querySelectorAll('th.sortable').forEach(th => {
+                    th.addEventListener('click', () => {
+                        const column = th.dataset.column;
+                        sortData(column);
+                    });
+                });
+
+            } catch (error) {
+                console.error('Памылка:', error);
+                showStatus('Памылка: ' + error.message, 'error');
+            }
+        }
+
+        // Load data automatically when page loads
+        window.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>
