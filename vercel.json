@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/telegram_webhook.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/telegram",
+      "dest": "api/telegram_webhook.py"
+    }
+  ],
+  "env": {
+    "ALLOWED_USER_IDS": "5980607330,184403698"
+  }
+}
+

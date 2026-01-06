@@ -1,0 +1,16 @@
+# Don't deploy these files to Vercel
+.env
+.git
+__pycache__
+*.pyc
+*.pyo
+.DS_Store
+README.md
+SETUP_NEXT_STEPS.md
+TELEGRAM_BOT_SETUP.md
+index.html
+import_games.py
+sync_engine.py
+*.sql
+.github
+

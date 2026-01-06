@@ -1,0 +1,117 @@
+name: Telegram Bot Sync
+
+on:
+  repository_dispatch:
+    types: [sync, overwrite]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run sync
+        id: sync
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+          SHEET_GID: ${{ secrets.SHEET_GID }}
+        run: |
+          # Import the sync engine and run it
+          MODE="${{ github.event.client_payload.mode }}"
+          
+          python3 << EOF
+          import json
+          from sync_engine import sync_games
+          
+          mode = "$MODE"
+          result = sync_games(mode=mode)
+          
+          # Write result to file for next step
+          with open('sync_result.json', 'w') as f:
+              json.dump(result, f)
+          
+          # Print result for logs
+          print(json.dumps(result, indent=2))
+          EOF
+      
+      - name: Send result to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ github.event.client_payload.chat_id }}
+        run: |
+          # Read the sync result
+          RESULT=$(cat sync_result.json)
+          
+          python3 << 'EOF'
+          import os
+          import json
+          import requests
+          
+          # Read result
+          with open('sync_result.json', 'r') as f:
+              result = json.load(f)
+          
+          bot_token = os.environ['TELEGRAM_BOT_TOKEN']
+          chat_id = os.environ['CHAT_ID']
+          
+          # Format message based on mode and success
+          if not result.get('success'):
+              message = f"❌ <b>Памылка</b>\n\n{result.get('error', 'Невядомая памылка')}"
+          elif result['mode'] == 'sync':
+              message = (
+                  "✅ <b>Сінхранізацыя завершана!</b>\n\n"
+                  "📊 <b>Статыстыка:</b>\n"
+                  f"• Гульняў у БД (было): {result['games_in_db_before']}\n"
+                  f"• Гульняў у табліцы: {result['valid_games']}\n"
+                  f"• Ужо сінхранізавана: {result['games_skipped']}\n"
+                  f"• Няправільных (не 10 гульцоў): {result['invalid_games']}\n"
+                  f"• Дadadдзена зараз: {result['games_synced']}\n"
+                  f"• Новых гульцоў: {result['players_created']}\n"
+                  f"• Гульняў у БД (зараз): {result['games_in_db_after']}"
+              )
+          else:  # overwrite
+              message = (
+                  "⚠️ <b>Перазапіс завершаны!</b>\n\n"
+                  "📊 <b>Статыстыка:</b>\n"
+                  f"• Гульняў у табліцы: {result['valid_games']}\n"
+                  f"• Імпартавана: {result['games_synced']}\n"
+                  f"• Адхілена: {result['invalid_games']}\n"
+                  f"  - Не 10 гульцоў: {result['invalid_games']}\n"
+                  f"• Гульцоў створана: {result['players_created']}\n"
+                  f"• Усяго гульняў у БД: {result['games_in_db_after']}"
+              )
+          
+          # Send message
+          url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+          payload = {
+              "chat_id": chat_id,
+              "text": message,
+              "parse_mode": "HTML"
+          }
+          
+          response = requests.post(url, json=payload)
+          if response.ok:
+              print("✓ Message sent to Telegram")
+          else:
+              print(f"✗ Failed to send message: {response.status_code}")
+              print(response.text)
+          EOF
+      
+      - name: Cleanup
+        if: always()
+        run: rm -f sync_result.json
+
