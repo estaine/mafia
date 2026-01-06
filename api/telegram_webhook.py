@@ -167,53 +167,75 @@ def handle_callback_query(callback_query: Dict) -> Dict[str, Any]:
     return {"statusCode": 200}
 
 
-def handler(request):
+from http.server import BaseHTTPRequestHandler
+from urllib.parse import parse_qs
+
+
+class handler(BaseHTTPRequestHandler):
     """
-    Vercel entry point for Python runtime.
-    Receives a Flask-like request object from Vercel.
+    Vercel entry point using BaseHTTPRequestHandler.
+    This is the pattern Vercel's Python runtime expects.
     """
-    # Log for debugging
-    print(f"Received request: method={request.method}")
     
-    # Only accept POST requests
-    if request.method != 'POST':
-        return ('Method not allowed', 405)
+    def do_POST(self):
+        """Handle POST requests from Telegram webhook."""
+        try:
+            # Read request body
+            content_length = int(self.headers.get('Content-Length', 0))
+            body_text = self.rfile.read(content_length).decode('utf-8')
+            
+            print(f"Received POST request, body length: {content_length}")
+            
+            # Parse JSON
+            try:
+                body = json.loads(body_text) if body_text else {}
+            except json.JSONDecodeError as e:
+                print(f"JSON decode error: {e}")
+                self.send_response(400)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "Invalid JSON"}).encode())
+                return
+            
+            print(f"Parsed body keys: {list(body.keys())}")
+            
+            # Handle different update types
+            if "message" in body:
+                message = body["message"]
+                chat_id = message.get("chat", {}).get("id")
+                user_id = message.get("from", {}).get("id")
+                text = message.get("text", "")
+                
+                print(f"Message from user {user_id}: {text}")
+                
+                if text.startswith("/start"):
+                    handle_start_command(chat_id, user_id)
+            
+            elif "callback_query" in body:
+                print("Handling callback query")
+                handle_callback_query(body["callback_query"])
+            
+            # Always return 200 OK to Telegram
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"ok": True}).encode())
+            
+        except Exception as e:
+            print(f"Error in handler: {e}")
+            import traceback
+            traceback.print_exc()
+            
+            # Still return 200 to Telegram to avoid retries
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"ok": True}).encode())
     
-    # Parse request body
-    try:
-        body = request.get_json(force=True, silent=True)
-        if body is None:
-            # Try to parse as text
-            body_text = request.get_data(as_text=True)
-            print(f"Request body text: {body_text[:200]}")  # Log first 200 chars
-            if body_text:
-                body = json.loads(body_text)
-            else:
-                body = {}
-    except Exception as e:
-        print(f"Error parsing body: {e}")
-        return (json.dumps({"error": "Invalid JSON"}), 400)
-    
-    print(f"Parsed body keys: {list(body.keys())}")
-    
-    # Handle different update types
-    if "message" in body:
-        message = body["message"]
-        chat_id = message.get("chat", {}).get("id")
-        user_id = message.get("from", {}).get("id")
-        text = message.get("text", "")
-        
-        print(f"Message from user {user_id}: {text}")
-        
-        if text.startswith("/start"):
-            handle_start_command(chat_id, user_id)
-            return (json.dumps({"ok": True}), 200)
-    
-    elif "callback_query" in body:
-        print("Handling callback query")
-        handle_callback_query(body["callback_query"])
-        return (json.dumps({"ok": True}), 200)
-    
-    # Default response - always return 200 to Telegram
-    return (json.dumps({"ok": True}), 200)
+    def do_GET(self):
+        """Reject GET requests."""
+        self.send_response(405)
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps({"error": "Method not allowed"}).encode())
 
