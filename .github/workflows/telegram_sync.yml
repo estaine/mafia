@@ -79,7 +79,7 @@ jobs:
                   f"• Гульняў у табліцы: {result['valid_games']}\n"
                   f"• Ужо сінхранізавана: {result['games_skipped']}\n"
                   f"• Няправільных (не 10 гульцоў): {result['invalid_games']}\n"
-                  f"• Дadadдзена зараз: {result['games_synced']}\n"
+                  f"• Дaдадзена зараз: {result['games_synced']}\n"
                   f"• Новых гульцоў: {result['players_created']}\n"
                   f"• Гульняў у БД (зараз): {result['games_in_db_after']}"
               )
