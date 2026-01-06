@@ -755,10 +755,21 @@
             font-size: 13px;
         }
 
+        .games-table th:first-child {
+            width: 80px;
+            text-align: center;
+        }
+
         .games-table td {
             padding: 10px;
             border: 1px solid #e0e0e0;
             text-align: left;
+        }
+
+        .games-table td:first-child {
+            text-align: center;
+            font-weight: 600;
+            color: #7f8c8d;
         }
 
         .games-table tr:nth-child(odd) {
@@ -781,6 +792,43 @@
         .loss-badge {
             color: #c0392b;
             font-weight: 600;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 20px;
+            flex-wrap: wrap;
+        }
+
+        .pagination-btn {
+            background: #2c3e50;
+            color: #ecf0f1;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #34495e;
+        }
+
+        .pagination-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .pagination-info {
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 14px;
         }
 
         .loading {
@@ -883,6 +931,22 @@
 
             .stat-bar-segment {
                 font-size: 11px;
+            }
+
+            .pagination {
+                gap: 5px;
+                padding: 15px 10px;
+            }
+
+            .pagination-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+
+            .pagination-info {
+                font-size: 12px;
+                width: 100%;
+                text-align: center;
             }
         }
     </style>
@@ -2007,10 +2071,18 @@
             `;
         }
 
-        // Render games list table
-        function renderGamesTable(games) {
+        // Pagination state
+        let currentGamePage = 1;
+        const gamesPerPage = 20;
+        let allGames = [];
+
+        // Render games list table with pagination
+        function renderGamesTable(games, page = 1) {
+            allGames = games;
+            currentGamePage = page;
+            
             const formatDate = (dateStr) => {
-                if (!dateStr) return '';
+                if (!dateStr) return '—';
                 const date = new Date(dateStr);
                 const day = String(date.getDate()).padStart(2, '0');
                 const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -2018,8 +2090,15 @@
                 return `${day}.${month}.${year}`;
             };
 
-            const rows = games.map(game => `
+            // Calculate pagination
+            const totalPages = Math.ceil(games.length / gamesPerPage);
+            const startIdx = (page - 1) * gamesPerPage;
+            const endIdx = startIdx + gamesPerPage;
+            const paginatedGames = games.slice(startIdx, endIdx);
+
+            const rows = paginatedGames.map(game => `
                 <tr>
+                    <td>#${game.game_id}</td>
                     <td>${formatDate(game.game_date)}</td>
                     <td>${roleNames[game.role_code] || game.role_code}</td>
                     <td class="${game.player_won ? 'win-badge' : 'loss-badge'}">
@@ -2028,10 +2107,22 @@
                 </tr>
             `).join('');
 
+            // Pagination controls
+            const paginationHTML = games.length > gamesPerPage ? `
+                <div class="pagination">
+                    <button class="pagination-btn" ${page === 1 ? 'disabled' : ''} onclick="goToGamePage(1)">«</button>
+                    <button class="pagination-btn" ${page === 1 ? 'disabled' : ''} onclick="goToGamePage(${page - 1})">‹</button>
+                    <span class="pagination-info">Старонка ${page} з ${totalPages} (усяго гульняў: ${games.length})</span>
+                    <button class="pagination-btn" ${page === totalPages ? 'disabled' : ''} onclick="goToGamePage(${page + 1})">›</button>
+                    <button class="pagination-btn" ${page === totalPages ? 'disabled' : ''} onclick="goToGamePage(${totalPages})">»</button>
+                </div>
+            ` : '';
+
             return `
                 <table class="games-table">
                     <thead>
                         <tr>
+                            <th>ID</th>
                             <th>Дата</th>
                             <th>Роля</th>
                             <th>Вынік</th>
@@ -2041,7 +2132,17 @@
                         ${rows}
                     </tbody>
                 </table>
+                ${paginationHTML}
             `;
+        }
+
+        // Navigate to a specific game page
+        function goToGamePage(page) {
+            const gamesSection = document.querySelector('.stats-section:has(.games-table)');
+            if (gamesSection) {
+                const newTableHTML = renderGamesTable(allGames, page);
+                gamesSection.innerHTML = `<h3>Гісторыя гульняў</h3>${newTableHTML}`;
+            }
         }
 
         // Show player stats page
