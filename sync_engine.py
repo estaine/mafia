@@ -123,6 +123,29 @@ def is_stats_column(header: str) -> bool:
     return header.strip() in ['M+', 'M-', 'Ш+', 'Ш-', 'Мф+', 'Мф-', 'Д+', 'Д-', 'Sh+', 'Sh-', 'Mf+', 'Mf-', 'D+', 'D-']
 
 
+def parse_game_number(header: str) -> Optional[int]:
+    """
+    Parse game number from header cell.
+    Expected format: "#34" or similar
+    Returns: game number (integer) or None if not found
+    """
+    if not header:
+        return None
+    
+    header = header.strip()
+    
+    # Look for format like "#34"
+    if header.startswith('#'):
+        try:
+            # Extract number after #
+            number_str = header[1:].split()[0]  # Get first part after #, before any space
+            return int(number_str)
+        except (ValueError, IndexError):
+            return None
+    
+    return None
+
+
 def parse_role_outcome(cell: str) -> Optional[Tuple[str, bool]]:
     """
     Parse cell value to extract role code and outcome.
@@ -346,6 +369,11 @@ def sync_games(mode: str = 'sync') -> Dict[str, any]:
         games_skipped = 0
         
         for col_idx in range(1, last_game_col):
+            # Parse game number from header
+            game_number = None
+            if col_idx < len(header_row):
+                game_number = parse_game_number(header_row[col_idx])
+            
             # Collect all players for this game
             players_data = []
             for row in player_rows:
@@ -383,12 +411,15 @@ def sync_games(mode: str = 'sync') -> Dict[str, any]:
             # Import the game
             try:
                 mafia_won = determine_mafia_won(players_data)
-                game_date = datetime(2024, 1, 1) + timedelta(days=col_idx)
                 game_data = {
                     'mafia_won': mafia_won,
-                    'game_date': game_date.isoformat(),
+                    'game_date': None,  # Will be set to NULL in database
                     'spreadsheet_column': col_idx
                 }
+                
+                # Add game_number if parsed
+                if game_number is not None:
+                    game_data['game_number'] = game_number
                 
                 game_result = api.post('game', game_data)
                 game_id = game_result[0]['id']

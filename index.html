@@ -2096,16 +2096,19 @@
             const endIdx = startIdx + gamesPerPage;
             const paginatedGames = games.slice(startIdx, endIdx);
 
-            const rows = paginatedGames.map(game => `
-                <tr>
-                    <td>#${game.game_id}</td>
-                    <td>${formatDate(game.game_date)}</td>
-                    <td>${roleNames[game.role_code] || game.role_code}</td>
-                    <td class="${game.player_won ? 'win-badge' : 'loss-badge'}">
-                        ${game.player_won ? 'Перамога' : 'Параза'}
-                    </td>
-                </tr>
-            `).join('');
+            const rows = paginatedGames.map(game => {
+                const gameNumber = game.game_number ? `#${game.game_number}` : `#${game.game_id}`;
+                return `
+                    <tr>
+                        <td>${gameNumber}</td>
+                        <td>${formatDate(game.game_date)}</td>
+                        <td>${roleNames[game.role_code] || game.role_code}</td>
+                        <td class="${game.player_won ? 'win-badge' : 'loss-badge'}">
+                            ${game.player_won ? 'Перамога' : 'Параза'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
 
             // Pagination controls
             const paginationHTML = games.length > gamesPerPage ? `
@@ -2122,7 +2125,7 @@
                 <table class="games-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>Гульня</th>
                             <th>Дата</th>
                             <th>Роля</th>
                             <th>Вынік</th>
