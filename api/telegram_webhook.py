@@ -20,6 +20,10 @@ ALLOWED_USERS = set(int(uid.strip()) for uid in ALLOWED_USER_IDS.split(',') if u
 
 def send_telegram_message(chat_id: int, text: str, reply_markup: Dict = None) -> bool:
     """Send a message to Telegram chat."""
+    if not TELEGRAM_BOT_TOKEN:
+        print("ERROR: TELEGRAM_BOT_TOKEN is not set!")
+        return False
+    
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
         "chat_id": chat_id,
@@ -29,11 +33,18 @@ def send_telegram_message(chat_id: int, text: str, reply_markup: Dict = None) ->
     if reply_markup:
         payload["reply_markup"] = reply_markup
     
+    print(f"Sending message to chat_id={chat_id}, has_keyboard={reply_markup is not None}")
+    
     try:
         response = requests.post(url, json=payload, timeout=10)
+        print(f"Telegram API response: status={response.status_code}")
+        if not response.ok:
+            print(f"Telegram API error: {response.text}")
         return response.ok
     except Exception as e:
         print(f"Error sending message: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 
@@ -99,12 +110,17 @@ def trigger_github_workflow(mode: str, chat_id: int) -> bool:
 
 def handle_start_command(chat_id: int, user_id: int) -> Dict[str, Any]:
     """Handle /start command - show menu with buttons."""
+    print(f"handle_start_command: user_id={user_id}, allowed_users={ALLOWED_USERS}")
+    
     if user_id not in ALLOWED_USERS:
+        print(f"User {user_id} is not authorized")
         send_telegram_message(
             chat_id,
             "❌ Вы не маеце доступу да гэтага бота."
         )
         return {"statusCode": 200}
+    
+    print(f"User {user_id} is authorized, sending menu")
     
     # Create inline keyboard with two buttons
     keyboard = {
@@ -125,7 +141,8 @@ def handle_start_command(chat_id: int, user_id: int) -> Dict[str, Any]:
         "<b>Перазапісаць</b> - выдаліць усё і загрузіць зноў"
     )
     
-    send_telegram_message(chat_id, message, keyboard)
+    success = send_telegram_message(chat_id, message, keyboard)
+    print(f"send_telegram_message returned: {success}")
     return {"statusCode": 200}
 
 
