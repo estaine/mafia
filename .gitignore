@@ -27,6 +27,7 @@ Thumbs.db
 
 # Temporary sync files
 sync_result.json
+test_webhook.py
 
 # Vercel
 .vercel

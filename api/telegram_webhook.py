@@ -167,21 +167,34 @@ def handle_callback_query(callback_query: Dict) -> Dict[str, Any]:
     return {"statusCode": 200}
 
 
-def handler(event, context):
-    """Main Vercel handler function."""
+def handler(request):
+    """
+    Vercel entry point for Python runtime.
+    Receives a Flask-like request object from Vercel.
+    """
+    # Log for debugging
+    print(f"Received request: method={request.method}")
+    
+    # Only accept POST requests
+    if request.method != 'POST':
+        return ('Method not allowed', 405)
     
     # Parse request body
     try:
-        if isinstance(event.get("body"), str):
-            body = json.loads(event["body"])
-        else:
-            body = event.get("body", {})
+        body = request.get_json(force=True, silent=True)
+        if body is None:
+            # Try to parse as text
+            body_text = request.get_data(as_text=True)
+            print(f"Request body text: {body_text[:200]}")  # Log first 200 chars
+            if body_text:
+                body = json.loads(body_text)
+            else:
+                body = {}
     except Exception as e:
         print(f"Error parsing body: {e}")
-        return {
-            "statusCode": 400,
-            "body": json.dumps({"error": "Invalid JSON"})
-        }
+        return (json.dumps({"error": "Invalid JSON"}), 400)
+    
+    print(f"Parsed body keys: {list(body.keys())}")
     
     # Handle different update types
     if "message" in body:
@@ -190,32 +203,17 @@ def handler(event, context):
         user_id = message.get("from", {}).get("id")
         text = message.get("text", "")
         
+        print(f"Message from user {user_id}: {text}")
+        
         if text.startswith("/start"):
-            return handle_start_command(chat_id, user_id)
+            handle_start_command(chat_id, user_id)
+            return (json.dumps({"ok": True}), 200)
     
     elif "callback_query" in body:
-        return handle_callback_query(body["callback_query"])
+        print("Handling callback query")
+        handle_callback_query(body["callback_query"])
+        return (json.dumps({"ok": True}), 200)
     
-    # Default response
-    return {
-        "statusCode": 200,
-        "body": json.dumps({"ok": True})
-    }
-
-
-# For Vercel Python runtime
-def main(request):
-    """Vercel entry point."""
-    event = {
-        "body": request.get_data(as_text=True),
-        "headers": dict(request.headers)
-    }
-    
-    result = handler(event, None)
-    
-    return (
-        result.get("body", ""),
-        result.get("statusCode", 200),
-        {"Content-Type": "application/json"}
-    )
+    # Default response - always return 200 to Telegram
+    return (json.dumps({"ok": True}), 200)
 
