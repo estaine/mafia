@@ -119,6 +119,248 @@
             display: block;
         }
 
+        .filters-container {
+            background: #f8f9fa;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            padding: 20px;
+            margin: 20px;
+        }
+
+        .filters-title {
+            font-size: 1.2em;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .filter-row {
+            margin-bottom: 20px;
+        }
+
+        .filter-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-label {
+            display: block;
+            font-size: 14px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .player-filter-input-container {
+            position: relative;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            background: #ffffff;
+            padding: 8px;
+            min-height: 42px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+            cursor: text;
+        }
+
+        .player-filter-input-container:focus-within {
+            border-color: #3498db;
+            outline: 2px solid rgba(52, 152, 219, 0.2);
+        }
+
+        .player-tag {
+            display: inline-flex;
+            align-items: center;
+            background: #3498db;
+            color: #ffffff;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 13px;
+            gap: 6px;
+        }
+
+        .player-tag-remove {
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+
+        .player-tag-remove:hover {
+            color: #ff6b6b;
+        }
+
+        .player-filter-input {
+            border: none;
+            outline: none;
+            flex: 1;
+            min-width: 120px;
+            font-size: 14px;
+            padding: 4px;
+            font-family: 'Baskerville', 'Garamond', 'Times New Roman', serif;
+        }
+
+        .player-filter-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 250px;
+            overflow-y: auto;
+            background: #ffffff;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            margin-top: 4px;
+        }
+
+        .player-filter-dropdown.show {
+            display: block;
+        }
+
+        .player-filter-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            color: #2c3e50;
+            font-size: 14px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .player-filter-item:last-child {
+            border-bottom: none;
+        }
+
+        .player-filter-item:hover,
+        .player-filter-item.selected {
+            background: #e8eaf6;
+        }
+
+        .player-filter-item.disabled {
+            color: #95a5a6;
+            cursor: not-allowed;
+            background: #f8f9fa;
+        }
+
+        .slider-container {
+            padding: 10px 0;
+        }
+
+        .range-slider-wrapper {
+            position: relative;
+            padding: 10px 0 20px 0;
+        }
+
+        .range-slider-track {
+            position: relative;
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+        }
+
+        .range-slider-range {
+            position: absolute;
+            height: 100%;
+            background: #3498db;
+            border-radius: 3px;
+        }
+
+        .range-slider-inputs {
+            position: relative;
+            width: 100%;
+        }
+
+        .range-slider-input {
+            position: absolute;
+            width: 100%;
+            pointer-events: none;
+            appearance: none;
+            -webkit-appearance: none;
+            background: transparent;
+            outline: none;
+        }
+
+        .range-slider-input::-webkit-slider-thumb {
+            pointer-events: all;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 3px solid #3498db;
+            background: #ffffff;
+            cursor: pointer;
+            -webkit-appearance: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+        }
+
+        .range-slider-input::-webkit-slider-thumb:hover {
+            border-color: #2980b9;
+            transform: scale(1.1);
+        }
+
+        .range-slider-input::-moz-range-thumb {
+            pointer-events: all;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 3px solid #3498db;
+            background: #ffffff;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+        }
+
+        .range-slider-input::-moz-range-thumb:hover {
+            border-color: #2980b9;
+            transform: scale(1.1);
+        }
+
+        .range-slider-values {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+            padding: 0 5px;
+        }
+
+        .range-slider-value {
+            font-size: 16px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .filters-toggle {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .filters-toggle-icon {
+            font-size: 1.2em;
+            transition: transform 0.3s;
+            color: #7f8c8d;
+        }
+
+        .filters-toggle-icon.expanded {
+            transform: rotate(180deg);
+        }
+
+        .filters-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .filters-content.expanded {
+            max-height: 500px;
+            margin-top: 15px;
+        }
+
         .table-wrapper {
             position: relative;
         }
@@ -961,6 +1203,69 @@
 
         <div class="status" id="status"></div>
 
+        <!-- Filters Section -->
+        <div class="filters-container" id="filtersContainer" style="display: none;">
+            <div class="filters-toggle" id="filtersToggle">
+                <div class="filters-title">Фільтры</div>
+                <span class="filters-toggle-icon" id="filtersToggleIcon">▼</span>
+            </div>
+            
+            <div class="filters-content" id="filtersContent">
+                <div class="filter-row">
+                <label class="filter-label">Гульцы:</label>
+                <div class="player-filter-input-container" id="playerFilterContainer">
+                    <input 
+                        type="text" 
+                        id="playerFilterInput" 
+                        class="player-filter-input" 
+                        placeholder="Пачніце пісаць імя гульца..."
+                        autocomplete="off"
+                    />
+                    <div class="player-filter-dropdown" id="playerFilterDropdown"></div>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <label class="filter-label">Колькасць гульняў:</label>
+                <div class="slider-container">
+                    <div class="range-slider-wrapper">
+                        <div class="range-slider-track">
+                            <div class="range-slider-range" id="sliderRange"></div>
+                        </div>
+                        <div class="range-slider-inputs">
+                            <input 
+                                type="range" 
+                                id="minGamesSlider" 
+                                class="range-slider-input"
+                                min="0" 
+                                max="100" 
+                                value="0"
+                                step="1"
+                            />
+                            <input 
+                                type="range" 
+                                id="maxGamesSlider" 
+                                class="range-slider-input"
+                                min="0" 
+                                max="100" 
+                                value="100"
+                                step="1"
+                            />
+                        </div>
+                        <div class="range-slider-values">
+                            <div>
+                                <div class="range-slider-value" id="minGamesDisplay">0</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="range-slider-value" id="maxGamesDisplay">100</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+
         <div class="table-wrapper" id="tableWrapper" style="display: none;">
             <table id="dataTable">
                 <thead>
@@ -1026,7 +1331,14 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wYXN5eWJ4cXZ6Ym54Y2llanFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MTM5NjAsImV4cCI6MjA4MzE4OTk2MH0.W6OWShmcUwkFgCIRZfeGls0qM7bIFFzcBU06JsKy_cQ';
 
         let playerData = [];
+        let filteredPlayerData = [];
         let currentSort = { column: 'name', ascending: true };
+        let selectedPlayers = [];
+        let filterMinGames = 0;
+        let filterMaxGames = 100;
+        let maxGamesInData = 100;
+        let playerFilterSelectedIndex = -1;
+        let playerFilterItems = [];
 
         function showStatus(message, type = 'info') {
             const status = document.getElementById('status');
@@ -1060,25 +1372,7 @@
                 currentSort.ascending = false; // Default to descending for better stats first
             }
 
-            playerData.sort((a, b) => {
-                let aVal = a[column];
-                let bVal = b[column];
-
-                // For name, use string comparison
-                if (column === 'name') {
-                    aVal = aVal.toLowerCase();
-                    bVal = bVal.toLowerCase();
-                    return currentSort.ascending ? 
-                        aVal.localeCompare(bVal) : 
-                        bVal.localeCompare(aVal);
-                }
-
-                // For numbers
-                return currentSort.ascending ? 
-                    aVal - bVal : 
-                    bVal - aVal;
-            });
-
+            sortFilteredData();
             displayTable();
             updateSortIndicators();
         }
@@ -1094,11 +1388,55 @@
             }
         }
 
+        function applyFilters() {
+            filteredPlayerData = playerData.filter(player => {
+                // Filter by selected players (if any)
+                if (selectedPlayers.length > 0 && !selectedPlayers.includes(player.name)) {
+                    return false;
+                }
+                
+                // Filter by minimum and maximum games
+                if (player.total < filterMinGames || player.total > filterMaxGames) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            // Re-apply the current sort to maintain order
+            sortFilteredData();
+            displayTable();
+        }
+
+        function sortFilteredData() {
+            const column = currentSort.column;
+            const ascending = currentSort.ascending;
+
+            filteredPlayerData.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+
+                // For name, use string comparison
+                if (column === 'name') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                    return ascending ? 
+                        aVal.localeCompare(bVal) : 
+                        bVal.localeCompare(aVal);
+                }
+
+                // For numbers
+                return ascending ? 
+                    aVal - bVal : 
+                    bVal - aVal;
+            });
+        }
+
         function displayTable() {
             const tableBody = document.getElementById('tableBody');
             tableBody.innerHTML = '';
 
-            playerData.forEach(player => {
+            filteredPlayerData.forEach(player => {
                 const tr = document.createElement('tr');
                 
                 // Add click handler for player stats
@@ -1216,6 +1554,10 @@
         let comparisonMode = false;
         let selectedPlayer1 = null;
         let selectedPlayer2 = null;
+
+        // Partner/Opponent table state
+        let partnerTableData = [];
+        let partnerTableSort = { column: 'totalTotal', ascending: false };
 
         // Navigation Control Functions
         function showPlayerStatsView() {
@@ -1479,7 +1821,260 @@
                 closeAutocomplete();
                 closeAutocomplete2();
             }
+            
+            // Close player filter dropdown when clicking outside
+            const playerFilterContainer = document.getElementById('playerFilterContainer');
+            if (playerFilterContainer && !playerFilterContainer.contains(e.target)) {
+                closePlayerFilterDropdown();
+            }
         });
+
+        // Player filter functions
+        function closePlayerFilterDropdown() {
+            const dropdown = document.getElementById('playerFilterDropdown');
+            if (dropdown) {
+                dropdown.classList.remove('show');
+                playerFilterSelectedIndex = -1;
+                playerFilterItems = [];
+            }
+        }
+
+        function renderPlayerFilterDropdown(filteredPlayers) {
+            const dropdown = document.getElementById('playerFilterDropdown');
+            
+            if (filteredPlayers.length === 0) {
+                dropdown.innerHTML = '<div class="player-filter-item disabled">Нічога не знойдзена</div>';
+                dropdown.classList.add('show');
+                return;
+            }
+
+            playerFilterItems = filteredPlayers;
+
+            const items = filteredPlayers.map((player, index) => {
+                const isSelected = selectedPlayers.includes(player.name);
+                const className = index === playerFilterSelectedIndex ? 
+                    'player-filter-item selected' : 
+                    'player-filter-item';
+                const disabledClass = isSelected ? ' disabled' : '';
+                return `<div class="${className}${disabledClass}" data-index="${index}" data-name="${player.name}">${player.name}${isSelected ? ' (выбрана)' : ''}</div>`;
+            }).join('');
+
+            dropdown.innerHTML = items;
+            dropdown.classList.add('show');
+
+            // Add click handlers
+            dropdown.querySelectorAll('.player-filter-item:not(.disabled)').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const playerName = e.target.dataset.name;
+                    if (!selectedPlayers.includes(playerName)) {
+                        addPlayerTag(playerName);
+                    }
+                });
+            });
+
+            // Scroll selected item into view
+            if (playerFilterSelectedIndex >= 0) {
+                const selectedItem = dropdown.querySelector('.player-filter-item.selected');
+                if (selectedItem) {
+                    selectedItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                }
+            }
+        }
+
+        function addPlayerTag(playerName) {
+            if (selectedPlayers.includes(playerName)) return;
+            
+            selectedPlayers.push(playerName);
+            renderPlayerTags();
+            
+            const input = document.getElementById('playerFilterInput');
+            input.value = '';
+            closePlayerFilterDropdown();
+            
+            applyFilters();
+        }
+
+        function removePlayerTag(playerName) {
+            selectedPlayers = selectedPlayers.filter(p => p !== playerName);
+            renderPlayerTags();
+            applyFilters();
+        }
+
+        function renderPlayerTags() {
+            const container = document.getElementById('playerFilterContainer');
+            const input = document.getElementById('playerFilterInput');
+            
+            // Remove existing tags
+            container.querySelectorAll('.player-tag').forEach(tag => tag.remove());
+            
+            // Add new tags before the input
+            selectedPlayers.forEach(playerName => {
+                const tag = document.createElement('span');
+                tag.className = 'player-tag';
+                tag.innerHTML = `
+                    ${playerName}
+                    <span class="player-tag-remove" data-name="${playerName}">&times;</span>
+                `;
+                container.insertBefore(tag, input);
+                
+                // Add click handler to remove button
+                tag.querySelector('.player-tag-remove').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removePlayerTag(e.target.dataset.name);
+                });
+            });
+        }
+
+        // Player filter input handler
+        function setupPlayerFilter() {
+            const input = document.getElementById('playerFilterInput');
+            const container = document.getElementById('playerFilterContainer');
+            
+            // Focus input when clicking on container
+            container.addEventListener('click', (e) => {
+                if (e.target === container || e.target === input) {
+                    input.focus();
+                }
+            });
+            
+            // Handle input
+            input.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.trim();
+                if (searchTerm.length === 0) {
+                    closePlayerFilterDropdown();
+                    return;
+                }
+                
+                // Filter players excluding already selected ones
+                const filtered = playerData.filter(player => 
+                    !selectedPlayers.includes(player.name) &&
+                    player.name.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+                
+                renderPlayerFilterDropdown(filtered);
+            });
+            
+            // Handle keyboard navigation
+            input.addEventListener('keydown', (e) => {
+                const dropdown = document.getElementById('playerFilterDropdown');
+                
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closePlayerFilterDropdown();
+                    input.blur();
+                    return;
+                }
+
+                if (!dropdown.classList.contains('show')) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    playerFilterSelectedIndex = Math.min(playerFilterSelectedIndex + 1, playerFilterItems.length - 1);
+                    renderPlayerFilterDropdown(playerFilterItems);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    playerFilterSelectedIndex = Math.max(playerFilterSelectedIndex - 1, -1);
+                    renderPlayerFilterDropdown(playerFilterItems);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (playerFilterSelectedIndex >= 0 && playerFilterItems[playerFilterSelectedIndex]) {
+                        const playerName = playerFilterItems[playerFilterSelectedIndex].name;
+                        if (!selectedPlayers.includes(playerName)) {
+                            addPlayerTag(playerName);
+                        }
+                    } else if (playerFilterItems.length === 1) {
+                        const playerName = playerFilterItems[0].name;
+                        if (!selectedPlayers.includes(playerName)) {
+                            addPlayerTag(playerName);
+                        }
+                    }
+                }
+            });
+        }
+
+        // Toggle filters visibility
+        function setupFiltersToggle() {
+            const toggle = document.getElementById('filtersToggle');
+            const content = document.getElementById('filtersContent');
+            const icon = document.getElementById('filtersToggleIcon');
+            
+            toggle.addEventListener('click', () => {
+                content.classList.toggle('expanded');
+                icon.classList.toggle('expanded');
+            });
+        }
+
+        // Games filter handlers
+        function setupGamesFilter() {
+            const minSlider = document.getElementById('minGamesSlider');
+            const maxSlider = document.getElementById('maxGamesSlider');
+            const minDisplay = document.getElementById('minGamesDisplay');
+            const maxDisplay = document.getElementById('maxGamesDisplay');
+            const sliderRange = document.getElementById('sliderRange');
+            
+            // Calculate max games from data
+            maxGamesInData = Math.max(...playerData.map(p => p.total));
+            
+            // Set slider attributes
+            minSlider.min = 0;
+            minSlider.max = maxGamesInData;
+            maxSlider.min = 0;
+            maxSlider.max = maxGamesInData;
+            
+            // Set initial values (default min = 25)
+            filterMinGames = Math.min(25, maxGamesInData);
+            filterMaxGames = maxGamesInData;
+            minSlider.value = filterMinGames;
+            maxSlider.value = filterMaxGames;
+            minDisplay.textContent = filterMinGames;
+            maxDisplay.textContent = filterMaxGames;
+            
+            updateSliderRange();
+            applyFilters(); // Apply initial filter with default values
+            
+            // Handle min slider
+            minSlider.addEventListener('input', () => {
+                let minValue = parseInt(minSlider.value);
+                let maxValue = parseInt(maxSlider.value);
+                
+                // Ensure min doesn't exceed max
+                if (minValue > maxValue) {
+                    minValue = maxValue;
+                    minSlider.value = minValue;
+                }
+                
+                filterMinGames = minValue;
+                minDisplay.textContent = minValue;
+                updateSliderRange();
+                applyFilters();
+            });
+            
+            // Handle max slider
+            maxSlider.addEventListener('input', () => {
+                let minValue = parseInt(minSlider.value);
+                let maxValue = parseInt(maxSlider.value);
+                
+                // Ensure max doesn't go below min
+                if (maxValue < minValue) {
+                    maxValue = minValue;
+                    maxSlider.value = maxValue;
+                }
+                
+                filterMaxGames = maxValue;
+                maxDisplay.textContent = maxValue;
+                updateSliderRange();
+                applyFilters();
+            });
+        }
+        
+        function updateSliderRange() {
+            const sliderRange = document.getElementById('sliderRange');
+            const minPercent = (filterMinGames / maxGamesInData) * 100;
+            const maxPercent = (filterMaxGames / maxGamesInData) * 100;
+            
+            sliderRange.style.left = minPercent + '%';
+            sliderRange.style.width = (maxPercent - minPercent) + '%';
+        }
 
         // Compare button handler
         document.getElementById('compareBtn').addEventListener('click', () => {
@@ -1578,12 +2173,42 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error(`Памылка загрузкі даных. Статус: ${response.status}`);
+                    throw new Error(`Памылка загрузкі дадзеных. Статус: ${response.status}`);
                 }
 
                 return await response.json();
             } catch (error) {
                 console.error('Error fetching player games:', error);
+                throw error;
+            }
+        }
+
+        // Fetch all game participants for given game IDs
+        async function fetchGameParticipants(gameIds) {
+            try {
+                if (!gameIds || gameIds.length === 0) {
+                    return [];
+                }
+
+                // Build query with OR conditions for all game IDs
+                const gameIdFilters = gameIds.map(id => `game_id.eq.${id}`).join(',');
+                const apiUrl = `${SUPABASE_URL}/rest/v1/player_games_view?or=(${gameIdFilters})`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Памылка загрузкі дадзеных. Статус: ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching game participants:', error);
                 throw error;
             }
         }
@@ -1635,6 +2260,84 @@
             });
 
             return stats;
+        }
+
+        // Calculate partner and opponent statistics
+        function calculatePartnerOpponentStats(currentPlayerGames, allGameParticipants) {
+            const currentPlayerName = currentPlayerGames[0]?.player_name;
+            if (!currentPlayerName) return [];
+
+            // Create a map of game_id -> current player's role info
+            const currentPlayerGameMap = {};
+            currentPlayerGames.forEach(game => {
+                currentPlayerGameMap[game.game_id] = {
+                    role_code: game.role_code,
+                    player_won: game.player_won,
+                    isRed: game.role_code === 'M' || game.role_code === 'Sh'
+                };
+            });
+
+            // Group all participants by player name
+            const playerStatsMap = {};
+            
+            allGameParticipants.forEach(participant => {
+                // Skip the current player
+                if (participant.player_name === currentPlayerName) return;
+                
+                const gameId = participant.game_id;
+                const currentPlayerInfo = currentPlayerGameMap[gameId];
+                
+                // Skip if current player wasn't in this game
+                if (!currentPlayerInfo) return;
+                
+                const playerName = participant.player_name;
+                const participantIsRed = participant.role_code === 'M' || participant.role_code === 'Sh';
+                
+                // Initialize player stats if not exists
+                if (!playerStatsMap[playerName]) {
+                    playerStatsMap[playerName] = {
+                        name: playerName,
+                        together: { total: 0, wins: 0, losses: 0 },
+                        against: { total: 0, wins: 0, losses: 0 },
+                        total: { total: 0, wins: 0, losses: 0 }
+                    };
+                }
+                
+                const stats = playerStatsMap[playerName];
+                const sameTeam = currentPlayerInfo.isRed === participantIsRed;
+                const currentPlayerWon = currentPlayerInfo.player_won;
+                
+                // Update total stats
+                stats.total.total++;
+                if (currentPlayerWon) {
+                    stats.total.wins++;
+                } else {
+                    stats.total.losses++;
+                }
+                
+                // Update together/against stats
+                if (sameTeam) {
+                    stats.together.total++;
+                    if (currentPlayerWon) {
+                        stats.together.wins++;
+                    } else {
+                        stats.together.losses++;
+                    }
+                } else {
+                    stats.against.total++;
+                    if (currentPlayerWon) {
+                        stats.against.wins++;
+                    } else {
+                        stats.against.losses++;
+                    }
+                }
+            });
+
+            // Convert to array and sort by total games descending
+            const playerStatsArray = Object.values(playerStatsMap);
+            playerStatsArray.sort((a, b) => b.total.total - a.total.total);
+            
+            return playerStatsArray;
         }
 
         // Helper function for Belarusian plural forms
@@ -1949,6 +2652,179 @@
             `;
         }
 
+        // Render partner and opponent stats table with pagination
+        function renderPartnerOpponentTable(partnerStats, page = 1) {
+            const calcPct = (wins, losses) => {
+                const total = wins + losses;
+                return total > 0 ? (wins / total * 100).toFixed(1) : '0.0';
+            };
+
+            if (!partnerStats || partnerStats.length === 0) {
+                return '<p>Няма дадзеных для адлюстравання</p>';
+            }
+
+            currentPartnerPage = page;
+
+            // Calculate pagination
+            const totalPages = Math.ceil(partnerStats.length / partnersPerPage);
+            const startIdx = (page - 1) * partnersPerPage;
+            const endIdx = startIdx + partnersPerPage;
+            const paginatedPartners = partnerStats.slice(startIdx, endIdx);
+
+            const rows = paginatedPartners.map(player => {
+                return `
+                    <tr>
+                        <td style="text-align: left;">${player.name}</td>
+                        <td class="win-cell">${player.together.wins}</td>
+                        <td class="loss-cell">${player.together.losses}</td>
+                        <td>${player.together.total}</td>
+                        <td class="percentage-cell">${calcPct(player.together.wins, player.together.losses)}%</td>
+                        <td class="win-cell">${player.against.wins}</td>
+                        <td class="loss-cell">${player.against.losses}</td>
+                        <td>${player.against.total}</td>
+                        <td class="percentage-cell">${calcPct(player.against.wins, player.against.losses)}%</td>
+                        <td class="win-cell">${player.total.wins}</td>
+                        <td class="loss-cell">${player.total.losses}</td>
+                        <td>${player.total.total}</td>
+                        <td class="percentage-cell">${calcPct(player.total.wins, player.total.losses)}%</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Pagination controls
+            const paginationHTML = partnerStats.length > partnersPerPage ? `
+                <div class="pagination">
+                    <button class="pagination-btn" ${page === 1 ? 'disabled' : ''} onclick="goToPartnerPage(1)">«</button>
+                    <button class="pagination-btn" ${page === 1 ? 'disabled' : ''} onclick="goToPartnerPage(${page - 1})">‹</button>
+                    <span class="pagination-info">Старонка ${page} з ${totalPages} (усяго гульцоў: ${partnerStats.length})</span>
+                    <button class="pagination-btn" ${page === totalPages ? 'disabled' : ''} onclick="goToPartnerPage(${page + 1})">›</button>
+                    <button class="pagination-btn" ${page === totalPages ? 'disabled' : ''} onclick="goToPartnerPage(${totalPages})">»</button>
+                </div>
+            ` : '';
+
+            return `
+                <table class="stats-table" id="partnerOpponentTable">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" style="text-align: center;">Гулец</th>
+                            <th colspan="4">Разам</th>
+                            <th colspan="4">Супраць</th>
+                            <th colspan="4">Агулам</th>
+                        </tr>
+                        <tr>
+                            <th class="sortable" data-column="togetherWins" title="Перамогі разам" style="min-width: 80px;">Перамогі</th>
+                            <th class="sortable" data-column="togetherLosses" title="Паразы разам" style="min-width: 80px;">Паразы</th>
+                            <th class="sortable" data-column="togetherTotal" title="Усяго разам" style="min-width: 80px;">Усяго</th>
+                            <th class="sortable" data-column="togetherPct" title="Працэнт перамог разам" style="min-width: 60px;">%</th>
+                            <th class="sortable" data-column="againstWins" title="Перамогі супраць" style="min-width: 80px;">Перамогі</th>
+                            <th class="sortable" data-column="againstLosses" title="Паразы супраць" style="min-width: 80px;">Паразы</th>
+                            <th class="sortable" data-column="againstTotal" title="Усяго супраць" style="min-width: 80px;">Усяго</th>
+                            <th class="sortable" data-column="againstPct" title="Працэнт перамог супраць" style="min-width: 60px;">%</th>
+                            <th class="sortable" data-column="totalWins" title="Усяго перамог" style="min-width: 80px;">Перамогі</th>
+                            <th class="sortable" data-column="totalLosses" title="Усяго параз" style="min-width: 80px;">Паразы</th>
+                            <th class="sortable" data-column="totalTotal" title="Усяго гульняў" style="min-width: 80px;">Усяго</th>
+                            <th class="sortable" data-column="totalPct" title="Агульны працэнт перамог" style="min-width: 60px;">%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+                ${paginationHTML}
+            `;
+        }
+
+        // Navigate to a specific partner page
+        function goToPartnerPage(page) {
+            const partnerSection = document.querySelector('.stats-section:has(#partnerOpponentTable)');
+            if (partnerSection) {
+                const newTableHTML = renderPartnerOpponentTable(partnerTableData, page);
+                partnerSection.innerHTML = `<h3>Партнёры і супернікі</h3>${newTableHTML}`;
+                setupPartnerTableSorting();
+                updatePartnerTableSortIndicators();
+            }
+        }
+
+        // Sort partner/opponent table
+        function sortPartnerTable(column) {
+            if (partnerTableSort.column === column) {
+                partnerTableSort.ascending = !partnerTableSort.ascending;
+            } else {
+                partnerTableSort.column = column;
+                partnerTableSort.ascending = false; // Default to descending
+                currentPartnerPage = 1; // Reset to first page when changing sort column
+            }
+
+            // Sort the data
+            partnerTableData.sort((a, b) => {
+                let aVal, bVal;
+                
+                // Handle different column types
+                if (column === 'together' || column === 'against' || column === 'total') {
+                    // Sort by total for section headers
+                    aVal = a[column].total;
+                    bVal = b[column].total;
+                } else if (column.endsWith('Pct')) {
+                    // Sort by percentage
+                    const section = column.replace('Pct', '');
+                    const aTotal = a[section].wins + a[section].losses;
+                    const bTotal = b[section].wins + b[section].losses;
+                    aVal = aTotal > 0 ? (a[section].wins / aTotal) : 0;
+                    bVal = bTotal > 0 ? (b[section].wins / bTotal) : 0;
+                } else {
+                    // Sort by specific stat (wins, losses, total)
+                    const parts = column.match(/^(together|against|total)(.+)$/);
+                    if (parts) {
+                        const section = parts[1];
+                        const stat = parts[2].toLowerCase();
+                        aVal = a[section][stat];
+                        bVal = b[section][stat];
+                    }
+                }
+
+                if (aVal === bVal) return 0;
+                const comparison = aVal > bVal ? 1 : -1;
+                return partnerTableSort.ascending ? comparison : -comparison;
+            });
+
+            // Re-render the table with current page
+            const tableContainer = document.querySelector('.stats-section:has(#partnerOpponentTable)');
+            if (tableContainer) {
+                const newTableHTML = renderPartnerOpponentTable(partnerTableData, currentPartnerPage);
+                tableContainer.innerHTML = `<h3>Партнёры і супернікі</h3>${newTableHTML}`;
+                setupPartnerTableSorting();
+                updatePartnerTableSortIndicators();
+            }
+        }
+
+        // Update sort indicators for partner table
+        function updatePartnerTableSortIndicators() {
+            const table = document.getElementById('partnerOpponentTable');
+            if (!table) return;
+
+            table.querySelectorAll('th').forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+            });
+
+            const sortedTh = table.querySelector(`th[data-column="${partnerTableSort.column}"]`);
+            if (sortedTh) {
+                sortedTh.classList.add(partnerTableSort.ascending ? 'sorted-asc' : 'sorted-desc');
+            }
+        }
+
+        // Setup event listeners for partner table sorting
+        function setupPartnerTableSorting() {
+            const table = document.getElementById('partnerOpponentTable');
+            if (!table) return;
+
+            table.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const column = th.dataset.column;
+                    sortPartnerTable(column);
+                });
+            });
+        }
+
         // Render comparison stats table
         function renderComparisonTable(stats1, stats2, player1Name, player2Name) {
             const calcPct = (wins, losses) => {
@@ -2076,6 +2952,10 @@
         const gamesPerPage = 20;
         let allGames = [];
 
+        // Partner table pagination state
+        let currentPartnerPage = 1;
+        const partnersPerPage = 20;
+
         // Render games list table with pagination
         function renderGamesTable(games, page = 1) {
             allGames = games;
@@ -2175,7 +3055,7 @@
                 if (!games || games.length === 0) {
                     playerStatsBody.innerHTML = `
                         <div class="player-stats-loading">
-                            <p>Няма даных для гульца</p>
+                            <p>Няма дадзеных для гульца</p>
                         </div>
                     `;
                     return;
@@ -2184,6 +3064,16 @@
                 // Calculate stats
                 const stats = calculatePlayerStats(games);
 
+                // Fetch all participants from the player's games for partner/opponent stats
+                const gameIds = games.map(game => game.game_id);
+                const allParticipants = await fetchGameParticipants(gameIds);
+                const partnerStats = calculatePartnerOpponentStats(games, allParticipants);
+
+                // Store partner data globally for sorting
+                partnerTableData = partnerStats;
+                partnerTableSort = { column: 'totalTotal', ascending: false };
+                currentPartnerPage = 1;
+
                 // Render player stats content
                 playerStatsBody.innerHTML = `
                     <div class="stats-section">
@@ -2191,10 +3081,18 @@
                         ${renderSummaryTable(stats)}
                     </div>
                     <div class="stats-section">
+                        <h3>Партнёры і супернікі</h3>
+                        ${renderPartnerOpponentTable(partnerStats, 1)}
+                    </div>
+                    <div class="stats-section">
                         <h3>Гісторыя гульняў</h3>
                         ${renderGamesTable(games)}
                     </div>
                 `;
+
+                // Setup sorting for partner table
+                setupPartnerTableSorting();
+                updatePartnerTableSortIndicators();
             } catch (error) {
                 console.error('Error loading player stats:', error);
                 playerStatsBody.innerHTML = `
@@ -2228,7 +3126,7 @@
                 if (!games1 || games1.length === 0) {
                     playerStatsBody.innerHTML = `
                         <div class="player-stats-loading">
-                            <p>Няма даных для гульца ${player1Name}</p>
+                            <p>Няма дадзеных для гульца ${player1Name}</p>
                         </div>
                     `;
                     return;
@@ -2237,7 +3135,7 @@
                 if (!games2 || games2.length === 0) {
                     playerStatsBody.innerHTML = `
                         <div class="player-stats-loading">
-                            <p>Няма даных для гульца ${player2Name}</p>
+                            <p>Няма дадзеных для гульца ${player2Name}</p>
                         </div>
                     `;
                     return;
@@ -2275,7 +3173,7 @@
         }
 
         async function loadData() {
-            showStatus('Загрузка даных з Supabase...', 'info');
+            showStatus('Загрузка дадзеных...', 'info');
 
             try {
                 const apiUrl = `${SUPABASE_URL}/rest/v1/player_stats?select=*`;
@@ -2289,25 +3187,28 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error(`Памылка загрузкі даных. Статус: ${response.status}`);
+                    throw new Error(`Памылка загрузкі дадзеных. Статус: ${response.status}`);
                 }
 
                 const data = await response.json();
                 
                 if (!data || data.length === 0) {
-                    throw new Error('Няма даных у базе. Запусціце import_games.py для загрузкі даных.');
+                    throw new Error('Няма дадзеных у базе. Запусціце import_games.py для загрузкі дадзеных.');
                 }
 
-                showStatus('Апрацоўка даных...', 'info');
+                showStatus('Апрацоўка дадзеных...', 'info');
 
                 // Map database fields to frontend format
                 playerData = data.map(dbRow => mapSupabaseData(dbRow));
+                filteredPlayerData = [...playerData];
 
                 // Sort by total games descending by default
                 currentSort = { column: 'total', ascending: true };
                 sortData('total');
 
-                showStatus(`Паспяхова загружана: ${playerData.length} гульцоў`, 'success');
+                // Hide status message and show filters and table
+                document.getElementById('status').classList.remove('show');
+                document.getElementById('filtersContainer').style.display = 'block';
                 document.getElementById('tableWrapper').style.display = 'block';
 
                 // Add click handlers to column headers
@@ -2317,6 +3218,11 @@
                         sortData(column);
                     });
                 });
+
+                // Setup filter handlers
+                setupFiltersToggle();
+                setupPlayerFilter();
+                setupGamesFilter();
 
             } catch (error) {
                 console.error('Памылка:', error);

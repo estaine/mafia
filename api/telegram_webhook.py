@@ -170,7 +170,7 @@ def handle_callback_query(callback_query: Dict) -> Dict[str, Any]:
     if mode == "sync":
         processing_text = "⏳ <b>Сінхранізацыя...</b>\n\nКалі ласка, пачакайце."
     else:
-        processing_text = "⏳ <b>Перазапіс...</b>\n\n⚠️ Усе даныя будуць выдалены!\nКалі ласка, пачакайце."
+        processing_text = "⏳ <b>Перазапіс...</b>\n\n⚠️ Усе дадзеныя будуць выдаленыя!\nКалі ласка, пачакайце."
     
     edit_telegram_message(chat_id, message_id, processing_text)
     

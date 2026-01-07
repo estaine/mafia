@@ -123,27 +123,44 @@ def is_stats_column(header: str) -> bool:
     return header.strip() in ['M+', 'M-', 'Ш+', 'Ш-', 'Мф+', 'Мф-', 'Д+', 'Д-', 'Sh+', 'Sh-', 'Mf+', 'Mf-', 'D+', 'D-']
 
 
-def parse_game_number(header: str) -> Optional[int]:
+def parse_game_header(header: str) -> Tuple[Optional[int], Optional[str]]:
     """
-    Parse game number from header cell.
-    Expected format: "#34" or similar
-    Returns: game number (integer) or None if not found
+    Parse game number and date from header cell.
+    Expected formats: 
+    - "#34" (old format - returns game_number only, date=None)
+    - "#34 15.01.2025" (new format - returns both game_number and date)
+    Returns: (game_number, date_string) tuple or (None, None) if not found
+    Date string is in ISO format (YYYY-MM-DD) for database storage
     """
     if not header:
-        return None
+        return (None, None)
     
     header = header.strip()
     
-    # Look for format like "#34"
+    # Look for format like "#34" or "#34 15.01.2025"
     if header.startswith('#'):
         try:
-            # Extract number after #
-            number_str = header[1:].split()[0]  # Get first part after #, before any space
-            return int(number_str)
+            parts = header[1:].split()  # Split after removing #
+            
+            # Parse game number (first part)
+            game_number = int(parts[0])
+            
+            # Parse date if present (second part)
+            game_date = None
+            if len(parts) >= 2:
+                date_str = parts[1]
+                # Parse dd.MM.yyyy format
+                date_parts = date_str.split('.')
+                if len(date_parts) == 3:
+                    day, month, year = date_parts
+                    # Convert to ISO format (YYYY-MM-DD)
+                    game_date = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+            
+            return (game_number, game_date)
         except (ValueError, IndexError):
-            return None
+            return (None, None)
     
-    return None
+    return (None, None)
 
 
 def parse_role_outcome(cell: str) -> Optional[Tuple[str, bool]]:
@@ -369,10 +386,11 @@ def sync_games(mode: str = 'sync') -> Dict[str, any]:
         games_skipped = 0
         
         for col_idx in range(1, last_game_col):
-            # Parse game number from header
+            # Parse game number and date from header
             game_number = None
+            game_date = None
             if col_idx < len(header_row):
-                game_number = parse_game_number(header_row[col_idx])
+                game_number, game_date = parse_game_header(header_row[col_idx])
             
             # Collect all players for this game
             players_data = []
@@ -413,7 +431,7 @@ def sync_games(mode: str = 'sync') -> Dict[str, any]:
                 mafia_won = determine_mafia_won(players_data)
                 game_data = {
                     'mafia_won': mafia_won,
-                    'game_date': None,  # Will be set to NULL in database
+                    'game_date': game_date,  # Use parsed date or None
                     'spreadsheet_column': col_idx
                 }
                 
