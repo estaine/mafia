@@ -134,8 +134,25 @@
             font-weight: 600;
         }
 
+        .filters-content {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
         .filter-row {
-            margin-bottom: 20px;
+            flex: 1;
+            min-width: 200px;
+            padding: 0 15px;
+        }
+        
+        .filter-row:first-child {
+            padding-left: 0;
+        }
+        
+        .filter-row:last-child {
+            padding-right: 0;
         }
 
         .filter-row:last-child {
@@ -474,6 +491,26 @@
             transition: all 0.2s;
         }
 
+        /* Clickable player cell in partner table */
+        .partner-player-cell {
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .partner-player-cell:hover {
+            background-color: #e3f2fd !important;
+        }
+
+        .partner-player-cell .partner-player-name {
+            color: #3498db;
+            transition: color 0.2s;
+        }
+
+        .partner-player-cell:hover .partner-player-name {
+            color: #2980b9;
+            text-decoration: underline;
+        }
+
         /* Player Stats Page */
         .player-stats-page {
             display: none;
@@ -654,6 +691,7 @@
             border-collapse: collapse;
             margin-top: 15px;
             font-size: 14px;
+            table-layout: fixed;
         }
 
         .comparison-table th {
@@ -664,22 +702,26 @@
             font-weight: 500;
             border: 1px solid #2c3e50;
             font-size: 13px;
+            width: 11%; /* 8 columns × 11% = 88% */
         }
 
         .comparison-table th:first-child {
             text-align: left;
+            width: 12%; /* First column is smaller = 12% */
         }
 
         .comparison-table td {
             padding: 10px;
             border: 1px solid #e0e0e0;
             text-align: center;
+            width: 11%;
         }
 
         .comparison-table td:first-child {
             text-align: left;
             font-weight: 600;
             color: #2c3e50;
+            width: 12%; /* First column is smaller = 12% */
         }
 
         .comparison-table tr:nth-child(odd) {
@@ -759,6 +801,7 @@
 
         .personal-stats-table th:nth-child(2) {
             color: #3498db;
+            font-weight: bold;
         }
 
         .personal-stats-table td {
@@ -836,6 +879,62 @@
         .personal-stats-table td.highlight {
             background-color: #e8eaf6 !important;
             transition: background-color 0.2s;
+        }
+
+        .personal-stats-table .expandable-row {
+            cursor: pointer;
+        }
+
+        .personal-stats-table .expandable-row:hover td {
+            background-color: #e3f2fd !important;
+        }
+
+        .personal-stats-table .detail-row {
+            display: none;
+            background-color: #f5f5f5 !important;
+        }
+
+        .personal-stats-table .detail-row.expanded {
+            display: table-row;
+        }
+
+        .personal-stats-table .detail-row td {
+            font-size: 13px;
+            color: #555;
+        }
+
+        .personal-stats-table .detail-row td.role-detail {
+            padding-left: 30px;
+        }
+
+        .personal-stats-table .detail-row td:nth-child(2) {
+            font-weight: bold;
+        }
+
+        .personal-stats-table .detail-row td:nth-child(3) {
+            padding: 10px;
+        }
+
+        .role-red {
+            color: #e74c3c !important;
+            font-weight: 600;
+        }
+
+        .role-black {
+            color: #2c3e50 !important;
+            font-weight: 600;
+        }
+
+        .expansion-indicator {
+            display: inline-block;
+            font-size: 10px;
+            margin-right: 5px;
+            transition: transform 0.2s;
+            color: #666;
+        }
+
+        .personal-stats-table .expandable-row.expanded .expansion-indicator {
+            transform: rotate(0deg);
         }
 
         .color-indicator {
@@ -1263,6 +1362,29 @@
                     </div>
                 </div>
             </div>
+
+            <div class="filter-row">
+                <label class="filter-label">Дата гульняў:</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input 
+                        type="text" 
+                        id="minDateFilter" 
+                        class="player-filter-input" 
+                        placeholder="дд.мм.гггг"
+                        style="width: 110px; padding: 8px; cursor: pointer;"
+                        readonly
+                    />
+                    <span style="color: #7f8c8d;">—</span>
+                    <input 
+                        type="text" 
+                        id="maxDateFilter" 
+                        class="player-filter-input" 
+                        placeholder="дд.мм.гггг"
+                        style="width: 110px; padding: 8px; cursor: pointer;"
+                        readonly
+                    />
+                </div>
+            </div>
             </div>
         </div>
 
@@ -1332,11 +1454,14 @@
 
         let playerData = [];
         let filteredPlayerData = [];
+        let allGamesData = [];
         let currentSort = { column: 'name', ascending: true };
         let selectedPlayers = [];
         let filterMinGames = 0;
         let filterMaxGames = 100;
         let maxGamesInData = 100;
+        let filterMinDate = '';
+        let filterMaxDate = '';
         let playerFilterSelectedIndex = -1;
         let playerFilterItems = [];
 
@@ -1388,7 +1513,90 @@
             }
         }
 
+        function calculatePlayerDataFromGames(games) {
+            const playerStatsMap = {};
+            
+            games.forEach(game => {
+                const playerName = game.player_name;
+                if (!playerStatsMap[playerName]) {
+                    playerStatsMap[playerName] = {
+                        name: playerName,
+                        mPlus: 0, mMinus: 0,
+                        shPlus: 0, shMinus: 0,
+                        mfPlus: 0, mfMinus: 0,
+                        dPlus: 0, dMinus: 0,
+                        red: 0, black: 0,
+                        total: 0,
+                        totalWins: 0
+                    };
+                }
+                
+                const stats = playerStatsMap[playerName];
+                const won = game.player_won;
+                const role = game.role_code;
+                const isRed = (role === 'M' || role === 'Sh');
+                
+                // Update role stats
+                if (role === 'M') {
+                    won ? stats.mPlus++ : stats.mMinus++;
+                } else if (role === 'Sh') {
+                    won ? stats.shPlus++ : stats.shMinus++;
+                } else if (role === 'Mf') {
+                    won ? stats.mfPlus++ : stats.mfMinus++;
+                } else if (role === 'D') {
+                    won ? stats.dPlus++ : stats.dMinus++;
+                }
+                
+                // Update team stats
+                if (isRed) {
+                    stats.red++;
+                } else {
+                    stats.black++;
+                }
+                
+                // Update totals
+                stats.total++;
+                if (won) stats.totalWins++;
+            });
+            
+            // Convert to array and calculate win percentages
+            return Object.values(playerStatsMap).map(stats => ({
+                ...stats,
+                winPct: stats.total > 0 ? (stats.totalWins / stats.total * 100) : 0
+            }));
+        }
+
         function applyFilters() {
+            console.log('Applying filters...', {
+                filterMinDate,
+                filterMaxDate,
+                totalGames: allGamesData.length,
+                filterMinGames,
+                filterMaxGames,
+                selectedPlayers
+            });
+            
+            // First, filter games by date range
+            let filteredGames = allGamesData;
+            
+            if (filterMinDate || filterMaxDate) {
+                filteredGames = allGamesData.filter(game => {
+                    if (!game.game_date) return true;
+                    const gameDate = game.game_date.split('T')[0]; // Get YYYY-MM-DD part
+                    
+                    if (filterMinDate && gameDate < filterMinDate) return false;
+                    if (filterMaxDate && gameDate > filterMaxDate) return false;
+                    
+                    return true;
+                });
+                console.log('After date filter:', filteredGames.length, 'games');
+            }
+            
+            // Recalculate player data from filtered games
+            playerData = calculatePlayerDataFromGames(filteredGames);
+            console.log('After recalc:', playerData.length, 'players');
+            
+            // Then filter by player names and game count
             filteredPlayerData = playerData.filter(player => {
                 // Filter by selected players (if any)
                 if (selectedPlayers.length > 0 && !selectedPlayers.includes(player.name)) {
@@ -1402,6 +1610,8 @@
                 
                 return true;
             });
+            
+            console.log('Final filtered players:', filteredPlayerData.length);
             
             // Re-apply the current sort to maintain order
             sortFilteredData();
@@ -1561,8 +1771,9 @@
 
         // Navigation Control Functions
         function showPlayerStatsView() {
-            // Hide table view
+            // Hide table view and filters
             document.getElementById('tableWrapper').style.display = 'none';
+            document.getElementById('filtersContainer').style.display = 'none';
             
             // Show player stats page
             document.getElementById('playerStatsPage').classList.add('show');
@@ -1582,8 +1793,9 @@
         }
 
         function showMainTableView() {
-            // Show table view
+            // Show table view and filters
             document.getElementById('tableWrapper').style.display = 'block';
+            document.getElementById('filtersContainer').style.display = 'block';
             
             // Hide player stats page
             document.getElementById('playerStatsPage').classList.remove('show');
@@ -2076,6 +2288,123 @@
             sliderRange.style.width = (maxPercent - minPercent) + '%';
         }
 
+        // Date filter handlers
+        async function setupDateFilter() {
+            const minDateInput = document.getElementById('minDateFilter');
+            const maxDateInput = document.getElementById('maxDateFilter');
+            
+            // Helper function to convert yyyy-MM-dd to dd.MM.yyyy
+            const formatDateDisplay = (isoDate) => {
+                const [year, month, day] = isoDate.split('-');
+                return `${day}.${month}.${year}`;
+            };
+            
+            // Helper function to convert dd.MM.yyyy to yyyy-MM-dd
+            const parseDateInput = (displayDate) => {
+                const parts = displayDate.split('.');
+                if (parts.length === 3) {
+                    const [day, month, year] = parts;
+                    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                }
+                return null;
+            };
+            
+            // Fetch min and max dates directly from the database
+            try {
+                const minDateUrl = `${SUPABASE_URL}/rest/v1/player_games_view?select=game_date&order=game_date.asc&limit=1`;
+                const maxDateUrl = `${SUPABASE_URL}/rest/v1/player_games_view?select=game_date&order=game_date.desc&limit=1`;
+                
+                const [minResponse, maxResponse] = await Promise.all([
+                    fetch(minDateUrl, {
+                        method: 'GET',
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        }
+                    }),
+                    fetch(maxDateUrl, {
+                        method: 'GET',
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        }
+                    })
+                ]);
+                
+                const minData = await minResponse.json();
+                const maxData = await maxResponse.json();
+                
+                if (minData.length > 0 && maxData.length > 0) {
+                    const minDate = minData[0].game_date.split('T')[0];
+                    const maxDate = maxData[0].game_date.split('T')[0];
+                    
+                    console.log('Date range from DB:', minDate, 'to', maxDate);
+                    
+                    // Set default values in yyyy-MM-dd format for filtering
+                    filterMinDate = minDate;
+                    filterMaxDate = maxDate;
+                    
+                    // Display in dd.MM.yyyy format
+                    minDateInput.value = formatDateDisplay(minDate);
+                    maxDateInput.value = formatDateDisplay(maxDate);
+                    
+                    // Store the internal values as data attributes
+                    minDateInput.dataset.isoDate = minDate;
+                    maxDateInput.dataset.isoDate = maxDate;
+                }
+            } catch (error) {
+                console.error('Error fetching date range:', error);
+            }
+            
+            // Make inputs editable and handle click to show date picker
+            minDateInput.removeAttribute('readonly');
+            maxDateInput.removeAttribute('readonly');
+            
+            // Handle date changes for min date
+            minDateInput.addEventListener('click', function() {
+                const tempInput = document.createElement('input');
+                tempInput.type = 'date';
+                tempInput.value = this.dataset.isoDate || filterMinDate;
+                tempInput.style.position = 'absolute';
+                tempInput.style.opacity = '0';
+                document.body.appendChild(tempInput);
+                
+                tempInput.addEventListener('change', () => {
+                    if (tempInput.value) {
+                        filterMinDate = tempInput.value;
+                        minDateInput.value = formatDateDisplay(tempInput.value);
+                        minDateInput.dataset.isoDate = tempInput.value;
+                        applyFilters();
+                    }
+                    document.body.removeChild(tempInput);
+                });
+                
+                tempInput.showPicker ? tempInput.showPicker() : tempInput.click();
+            });
+            
+            // Handle date changes for max date
+            maxDateInput.addEventListener('click', function() {
+                const tempInput = document.createElement('input');
+                tempInput.type = 'date';
+                tempInput.value = this.dataset.isoDate || filterMaxDate;
+                tempInput.style.position = 'absolute';
+                tempInput.style.opacity = '0';
+                document.body.appendChild(tempInput);
+                
+                tempInput.addEventListener('change', () => {
+                    if (tempInput.value) {
+                        filterMaxDate = tempInput.value;
+                        maxDateInput.value = formatDateDisplay(tempInput.value);
+                        maxDateInput.dataset.isoDate = tempInput.value;
+                        applyFilters();
+                    }
+                    document.body.removeChild(tempInput);
+                });
+                
+                tempInput.showPicker ? tempInput.showPicker() : tempInput.click();
+            });
+        }
+
         // Compare button handler
         document.getElementById('compareBtn').addEventListener('click', () => {
             comparisonMode = true;
@@ -2233,29 +2562,60 @@
 
             // Calculate stats for each combination
             const stats = {
-                redRed: { wins: 0, losses: 0 },      // Both red team
-                redBlack: { wins: 0, losses: 0 },    // P1 red, P2 black
-                blackRed: { wins: 0, losses: 0 },    // P1 black, P2 red
-                blackBlack: { wins: 0, losses: 0 }   // Both black team
+                redRed: { wins: 0, losses: 0, roles: {} },      // Both red team
+                redBlack: { wins: 0, losses: 0, roles: {} },    // P1 red, P2 black
+                blackRed: { wins: 0, losses: 0, roles: {} },    // P1 black, P2 red
+                blackBlack: { wins: 0, losses: 0, roles: {} }   // Both black team
             };
 
             commonGames.forEach(({ player1, player2 }) => {
                 const p1IsRed = player1.role_code === 'M' || player1.role_code === 'Sh';
                 const p2IsRed = player2.role_code === 'M' || player2.role_code === 'Sh';
                 const redWon = !player1.mafia_won;
+                
+                // Normalize role codes (Mf -> Ma for consistency)
+                const p1RoleNormalized = player1.role_code === 'Mf' ? 'Ma' : player1.role_code;
+                const p2RoleNormalized = player2.role_code === 'Mf' ? 'Ma' : player2.role_code;
+                
+                // Create role combination key
+                const roleKey = `${p1RoleNormalized}-${p2RoleNormalized}`;
 
                 if (p1IsRed && p2IsRed) {
                     if (redWon) stats.redRed.wins++;
                     else stats.redRed.losses++;
+                    // Track role-specific stats
+                    if (!stats.redRed.roles[roleKey]) {
+                        stats.redRed.roles[roleKey] = { wins: 0, losses: 0 };
+                    }
+                    if (redWon) stats.redRed.roles[roleKey].wins++;
+                    else stats.redRed.roles[roleKey].losses++;
                 } else if (p1IsRed && !p2IsRed) {
                     if (redWon) stats.redBlack.wins++;
                     else stats.redBlack.losses++;
+                    // Track role-specific stats
+                    if (!stats.redBlack.roles[roleKey]) {
+                        stats.redBlack.roles[roleKey] = { wins: 0, losses: 0 };
+                    }
+                    if (redWon) stats.redBlack.roles[roleKey].wins++;
+                    else stats.redBlack.roles[roleKey].losses++;
                 } else if (!p1IsRed && p2IsRed) {
                     if (redWon) stats.blackRed.wins++;
                     else stats.blackRed.losses++;
+                    // Track role-specific stats
+                    if (!stats.blackRed.roles[roleKey]) {
+                        stats.blackRed.roles[roleKey] = { wins: 0, losses: 0 };
+                    }
+                    if (redWon) stats.blackRed.roles[roleKey].wins++;
+                    else stats.blackRed.roles[roleKey].losses++;
                 } else {
                     if (redWon) stats.blackBlack.losses++;
                     else stats.blackBlack.wins++;
+                    // Track role-specific stats
+                    if (!stats.blackBlack.roles[roleKey]) {
+                        stats.blackBlack.roles[roleKey] = { wins: 0, losses: 0 };
+                    }
+                    if (redWon) stats.blackBlack.roles[roleKey].losses++;
+                    else stats.blackBlack.roles[roleKey].wins++;
                 }
             });
 
@@ -2370,6 +2730,89 @@
             return 'гульнях';
         }
 
+        // Get role display name
+        function getRoleDisplayName(roleCode) {
+            const roleNames = {
+                'M': 'Мірны жыхар',
+                'Sh': 'Шэрыф',
+                'Ma': 'Мафія',
+                'Mf': 'Мафія',
+                'D': 'Дон'
+            };
+            return roleNames[roleCode] || roleCode;
+        }
+
+        // Get role color class (for text color)
+        function getRoleColorClass(roleCode) {
+            // Red team roles
+            if (roleCode === 'M' || roleCode === 'Sh') {
+                return 'role-red';
+            }
+            // Black team roles
+            if (roleCode === 'Ma' || roleCode === 'Mf' || roleCode === 'D') {
+                return 'role-black';
+            }
+            return '';
+        }
+
+        // Render role detail rows
+        function renderRoleDetailRows(roleStats, parentRowIndex, player1Name, player2Name) {
+            // Define all possible role combinations based on parent row type
+            let allCombinations = [];
+            
+            if (parentRowIndex === 0) { // red-red
+                allCombinations = ['M-M', 'M-Sh', 'Sh-M'];
+            } else if (parentRowIndex === 1) { // black-black
+                allCombinations = ['Ma-Ma', 'Ma-D', 'D-Ma'];
+            } else if (parentRowIndex === 2) { // red-black
+                allCombinations = ['M-Ma', 'M-D', 'Sh-Ma', 'Sh-D'];
+            } else if (parentRowIndex === 3) { // black-red
+                allCombinations = ['Ma-M', 'Ma-Sh', 'D-M', 'D-Sh'];
+            }
+
+            let detailRows = '';
+            allCombinations.forEach(roleKey => {
+                const [p1Role, p2Role] = roleKey.split('-');
+                const stats = roleStats && roleStats[roleKey] ? roleStats[roleKey] : { wins: 0, losses: 0 };
+                const total = stats.wins + stats.losses;
+                
+                const p1RoleName = getRoleDisplayName(p1Role);
+                const p2RoleName = getRoleDisplayName(p2Role);
+                const p1ColorClass = getRoleColorClass(p1Role);
+                const p2ColorClass = getRoleColorClass(p2Role);
+                
+                // Determine which color class to use based on the parent row
+                let colorClass = 'stat-bar-red';
+                if (parentRowIndex === 1) colorClass = 'stat-bar-black'; // both-black
+                else if (parentRowIndex === 3) colorClass = 'stat-bar-black'; // p1-black-p2-red
+                
+                let tooltipText = '';
+                if (total > 0) {
+                    const winsForm = getWinsForm(stats.wins);
+                    const gamesForm = getGamesForm(total);
+                    const winPct = (stats.wins / total * 100).toFixed(1);
+                    tooltipText = `${p1RoleName} | ${p2RoleName}: ${stats.wins} ${winsForm} у ${total} ${gamesForm} (${winPct}%)`;
+                } else {
+                    tooltipText = `${p1RoleName} | ${p2RoleName}: 0 гульняў`;
+                }
+                
+                detailRows += `
+                    <tr class="detail-row" data-parent-row="${parentRowIndex}">
+                        <td class="role-detail ${p1ColorClass}">${p1RoleName}</td>
+                        <td class="role-detail ${p2ColorClass}">${p2RoleName}</td>
+                        <td>${renderStatBar(stats.wins, stats.losses, colorClass, `${parentRowIndex}-${roleKey}`, {
+                            rowType: 'role-detail',
+                            player1: player1Name,
+                            player2: player2Name,
+                            customTooltip: tooltipText
+                        })}</td>
+                    </tr>
+                `;
+            });
+            
+            return detailRows;
+        }
+
         // Render stat bar
         function renderStatBar(wins, losses, winColorClass, rowIndex, tooltipData, useGrey = false, customColors = null) {
             const total = wins + losses;
@@ -2402,27 +2845,32 @@
             // Generate tooltip text
             let tooltipText = '';
             if (tooltipData) {
-                const { rowType, player1, player2 } = tooltipData;
-                const winsForm = getWinsForm(wins);
-                const gamesForm = getGamesForm(total);
-                const winPct = winPercent.toFixed(1);
-                const lossPct = lossPercent.toFixed(1);
-                
-                if (rowType === 'both-red') {
-                    tooltipText = `Разам за чырвоных: ${wins} ${winsForm} у ${total} ${gamesForm} (${winPct}%)`;
-                } else if (rowType === 'p1-red-p2-black') {
-                    const lossesForm = getWinsForm(losses);
-                    tooltipText = `${player1} за чырвоных: ${wins} ${winsForm} (${winPct}%) vs ${player2} за чорных: ${losses} ${lossesForm} (${lossPct}%) у ${total} ${gamesForm}`;
-                } else if (rowType === 'p1-black-p2-red') {
-                    const lossesForm = getWinsForm(losses);
-                    tooltipText = `${player1} за чорных: ${wins} ${winsForm} (${winPct}%) vs ${player2} за чырвоных: ${losses} ${lossesForm} (${lossPct}%) у ${total} ${gamesForm}`;
-                } else if (rowType === 'both-black') {
-                    tooltipText = `Разам за чорных: ${wins} ${winsForm} у ${total} ${gamesForm} (${winPct}%)`;
-                } else if (rowType === 'summary-same') {
-                    tooltipText = `Агулам за адзін колер: ${wins} ${winsForm} у ${total} ${gamesForm} (${winPct}%)`;
-                } else if (rowType === 'summary-diff') {
-                    const lossesForm = getWinsForm(losses);
-                    tooltipText = `Агулам за розныя колеры: ${player1}: ${wins} ${winsForm} (${winPct}%) vs ${player2}: ${losses} ${lossesForm} (${lossPct}%) у ${total} ${gamesForm}`;
+                // Check for custom tooltip first
+                if (tooltipData.customTooltip) {
+                    tooltipText = tooltipData.customTooltip;
+                } else {
+                    const { rowType, player1, player2 } = tooltipData;
+                    const winsForm = getWinsForm(wins);
+                    const gamesForm = getGamesForm(total);
+                    const winPct = winPercent.toFixed(1);
+                    const lossPct = lossPercent.toFixed(1);
+                    
+                    if (rowType === 'both-red') {
+                        tooltipText = `Разам за чырвоных: ${wins} ${winsForm} у ${total} ${gamesForm} (${winPct}%)`;
+                    } else if (rowType === 'p1-red-p2-black') {
+                        const lossesForm = getWinsForm(losses);
+                        tooltipText = `${player1} за чырвоных: ${wins} ${winsForm} (${winPct}%) vs ${player2} за чорных: ${losses} ${lossesForm} (${lossPct}%) у ${total} ${gamesForm}`;
+                    } else if (rowType === 'p1-black-p2-red') {
+                        const lossesForm = getWinsForm(losses);
+                        tooltipText = `${player1} за чорных: ${wins} ${winsForm} (${winPct}%) vs ${player2} за чырвоных: ${losses} ${lossesForm} (${lossPct}%) у ${total} ${gamesForm}`;
+                    } else if (rowType === 'both-black') {
+                        tooltipText = `Разам за чорных: ${wins} ${winsForm} у ${total} ${gamesForm} (${winPct}%)`;
+                    } else if (rowType === 'summary-same') {
+                        tooltipText = `Агулам за адзін колер: ${wins} ${winsForm} у ${total} ${gamesForm} (${winPct}%)`;
+                    } else if (rowType === 'summary-diff') {
+                        const lossesForm = getWinsForm(losses);
+                        tooltipText = `Агулам за розныя колеры: ${player1}: ${wins} ${winsForm} (${winPct}%) vs ${player2}: ${losses} ${lossesForm} (${lossPct}%) у ${total} ${gamesForm}`;
+                    }
                 }
             }
 
@@ -2492,8 +2940,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr data-row="0">
-                            <td data-color="red"><span class="color-indicator color-red"></span></td>
+                        <tr data-row="0" class="expandable-row" data-expandable="true">
+                            <td data-color="red"><span class="expansion-indicator">▶</span> <span class="color-indicator color-red"></span></td>
                             <td data-color="red"><span class="color-indicator color-red"></span></td>
                             <td>${renderStatBar(h2hStats.redRed.wins, h2hStats.redRed.losses, 'stat-bar-red', 0, {
                                 rowType: 'both-red',
@@ -2501,8 +2949,9 @@
                                 player2: player2Name
                             })}</td>
                         </tr>
-                        <tr data-row="1">
-                            <td data-color="black"><span class="color-indicator color-black"></span></td>
+                        ${renderRoleDetailRows(h2hStats.redRed.roles, 0, player1Name, player2Name)}
+                        <tr data-row="1" class="expandable-row" data-expandable="true">
+                            <td data-color="black"><span class="expansion-indicator">▶</span> <span class="color-indicator color-black"></span></td>
                             <td data-color="black"><span class="color-indicator color-black"></span></td>
                             <td>${renderStatBar(h2hStats.blackBlack.wins, h2hStats.blackBlack.losses, 'stat-bar-black', 1, {
                                 rowType: 'both-black',
@@ -2510,6 +2959,7 @@
                                 player2: player2Name
                             })}</td>
                         </tr>
+                        ${renderRoleDetailRows(h2hStats.blackBlack.roles, 1, player1Name, player2Name)}
                         <tr class="summary-row" data-row="summary-same">
                             <td colspan="2">Агулам за адзін колер</td>
                             <td>${renderStatBar(sameColorWins, sameColorLosses, sameColorBarClass, 'summary-same', {
@@ -2523,8 +2973,8 @@
                                 lossColor: 'silver'
                             })}</td>
                         </tr>
-                        <tr data-row="2">
-                            <td data-color="red"><span class="color-indicator color-red"></span></td>
+                        <tr data-row="2" class="expandable-row" data-expandable="true">
+                            <td data-color="red"><span class="expansion-indicator">▶</span> <span class="color-indicator color-red"></span></td>
                             <td data-color="black"><span class="color-indicator color-black"></span></td>
                             <td>${renderStatBar(h2hStats.redBlack.wins, h2hStats.redBlack.losses, 'stat-bar-red', 2, {
                                 rowType: 'p1-red-p2-black',
@@ -2532,8 +2982,9 @@
                                 player2: player2Name
                             })}</td>
                         </tr>
-                        <tr data-row="3">
-                            <td data-color="black"><span class="color-indicator color-black"></span></td>
+                        ${renderRoleDetailRows(h2hStats.redBlack.roles, 2, player1Name, player2Name)}
+                        <tr data-row="3" class="expandable-row" data-expandable="true">
+                            <td data-color="black"><span class="expansion-indicator">▶</span> <span class="color-indicator color-black"></span></td>
                             <td data-color="red"><span class="color-indicator color-red"></span></td>
                             <td>${renderStatBar(h2hStats.blackRed.losses, h2hStats.blackRed.wins, 'stat-bar-black', 3, {
                                 rowType: 'p1-black-p2-red',
@@ -2541,6 +2992,7 @@
                                 player2: player2Name
                             })}</td>
                         </tr>
+                        ${renderRoleDetailRows(h2hStats.blackRed.roles, 3, player1Name, player2Name)}
                         <tr class="summary-row" data-row="summary-diff">
                             <td colspan="2">Агулам за розныя колеры</td>
                             <td>${renderStatBar(diffColorWins, diffColorLosses, diffColorBarClass, 'summary-diff', {
@@ -2587,6 +3039,46 @@
             });
         }
 
+        // Setup expansion handlers for personal stats table
+        function setupPersonalStatsExpansion() {
+            const table = document.getElementById('personalStatsTable');
+            if (!table) return;
+
+            const expandableRows = table.querySelectorAll('.expandable-row');
+            
+            expandableRows.forEach(row => {
+                row.addEventListener('click', (e) => {
+                    const rowIndex = row.dataset.row;
+                    const detailRows = table.querySelectorAll(`.detail-row[data-parent-row="${rowIndex}"]`);
+                    const indicator = row.querySelector('.expansion-indicator');
+                    
+                    if (!detailRows.length) return; // No detail rows to expand
+                    
+                    // Check if currently expanded
+                    const isExpanded = detailRows[0].classList.contains('expanded');
+                    
+                    if (isExpanded) {
+                        // Collapse
+                        detailRows.forEach(detailRow => {
+                            detailRow.classList.remove('expanded');
+                        });
+                        if (indicator) indicator.textContent = '▶';
+                        row.classList.remove('expanded');
+                    } else {
+                        // Expand current row (multiple rows can be expanded at once)
+                        detailRows.forEach(detailRow => {
+                            detailRow.classList.add('expanded');
+                        });
+                        if (indicator) indicator.textContent = '▼';
+                        row.classList.add('expanded');
+                    }
+                });
+                
+                // Add visual feedback on hover
+                row.style.cursor = 'pointer';
+            });
+        }
+
         // Render summary stats table
         function renderSummaryTable(stats) {
             const calcPct = (wins, losses) => {
@@ -2598,9 +3090,10 @@
                 <table class="stats-table">
                     <thead>
                         <tr>
-                            <th style="text-align: left;">Роля</th>
+                            <th style="text-align: center;">Роля</th>
                             <th>Перамогі</th>
                             <th>Паразы</th>
+                            <th>Гульні</th>
                             <th>%</th>
                         </tr>
                     </thead>
@@ -2609,42 +3102,49 @@
                             <td>Мірны жыхар</td>
                             <td class="win-cell">${stats.byRole.M.wins}</td>
                             <td class="loss-cell">${stats.byRole.M.losses}</td>
+                            <td>${stats.byRole.M.wins + stats.byRole.M.losses}</td>
                             <td class="percentage-cell">${calcPct(stats.byRole.M.wins, stats.byRole.M.losses)}%</td>
                         </tr>
                         <tr>
                             <td>Шэрыф</td>
                             <td class="win-cell">${stats.byRole.Sh.wins}</td>
                             <td class="loss-cell">${stats.byRole.Sh.losses}</td>
+                            <td>${stats.byRole.Sh.wins + stats.byRole.Sh.losses}</td>
                             <td class="percentage-cell">${calcPct(stats.byRole.Sh.wins, stats.byRole.Sh.losses)}%</td>
                         </tr>
                         <tr class="team-row">
                             <td>Агулам за чырвоных</td>
                             <td class="win-cell">${stats.red.wins}</td>
                             <td class="loss-cell">${stats.red.losses}</td>
+                            <td>${stats.red.wins + stats.red.losses}</td>
                             <td class="percentage-cell">${calcPct(stats.red.wins, stats.red.losses)}%</td>
                         </tr>
                         <tr>
                             <td>Мафія</td>
                             <td class="win-cell">${stats.byRole.Mf.wins}</td>
                             <td class="loss-cell">${stats.byRole.Mf.losses}</td>
+                            <td>${stats.byRole.Mf.wins + stats.byRole.Mf.losses}</td>
                             <td class="percentage-cell">${calcPct(stats.byRole.Mf.wins, stats.byRole.Mf.losses)}%</td>
                         </tr>
                         <tr>
                             <td>Дон</td>
                             <td class="win-cell">${stats.byRole.D.wins}</td>
                             <td class="loss-cell">${stats.byRole.D.losses}</td>
+                            <td>${stats.byRole.D.wins + stats.byRole.D.losses}</td>
                             <td class="percentage-cell">${calcPct(stats.byRole.D.wins, stats.byRole.D.losses)}%</td>
                         </tr>
                         <tr class="team-row">
                             <td>Агулам за чорных</td>
                             <td class="win-cell">${stats.black.wins}</td>
                             <td class="loss-cell">${stats.black.losses}</td>
+                            <td>${stats.black.wins + stats.black.losses}</td>
                             <td class="percentage-cell">${calcPct(stats.black.wins, stats.black.losses)}%</td>
                         </tr>
                         <tr class="total-row">
                             <td>Усяго</td>
                             <td class="win-cell">${stats.total.wins}</td>
                             <td class="loss-cell">${stats.total.losses}</td>
+                            <td>${stats.total.wins + stats.total.losses}</td>
                             <td class="percentage-cell">${stats.total.winPct.toFixed(1)}%</td>
                         </tr>
                     </tbody>
@@ -2674,7 +3174,9 @@
             const rows = paginatedPartners.map(player => {
                 return `
                     <tr>
-                        <td style="text-align: left;">${player.name}</td>
+                        <td class="partner-player-cell" style="text-align: left;" onclick="compareWithPlayer('${player.name.replace(/'/g, "\\'")}')">
+                            <span class="partner-player-name">${player.name}</span>
+                        </td>
                         <td class="win-cell">${player.together.wins}</td>
                         <td class="loss-cell">${player.together.losses}</td>
                         <td>${player.together.total}</td>
@@ -2714,15 +3216,15 @@
                         <tr>
                             <th class="sortable" data-column="togetherWins" title="Перамогі разам" style="min-width: 80px;">Перамогі</th>
                             <th class="sortable" data-column="togetherLosses" title="Паразы разам" style="min-width: 80px;">Паразы</th>
-                            <th class="sortable" data-column="togetherTotal" title="Усяго разам" style="min-width: 80px;">Усяго</th>
+                            <th class="sortable" data-column="togetherTotal" title="Усяго разам" style="min-width: 80px;">Гульні</th>
                             <th class="sortable" data-column="togetherPct" title="Працэнт перамог разам" style="min-width: 60px;">%</th>
                             <th class="sortable" data-column="againstWins" title="Перамогі супраць" style="min-width: 80px;">Перамогі</th>
                             <th class="sortable" data-column="againstLosses" title="Паразы супраць" style="min-width: 80px;">Паразы</th>
-                            <th class="sortable" data-column="againstTotal" title="Усяго супраць" style="min-width: 80px;">Усяго</th>
+                            <th class="sortable" data-column="againstTotal" title="Усяго супраць" style="min-width: 80px;">Гульні</th>
                             <th class="sortable" data-column="againstPct" title="Працэнт перамог супраць" style="min-width: 60px;">%</th>
                             <th class="sortable" data-column="totalWins" title="Усяго перамог" style="min-width: 80px;">Перамогі</th>
                             <th class="sortable" data-column="totalLosses" title="Усяго параз" style="min-width: 80px;">Паразы</th>
-                            <th class="sortable" data-column="totalTotal" title="Усяго гульняў" style="min-width: 80px;">Усяго</th>
+                            <th class="sortable" data-column="totalTotal" title="Усяго гульняў" style="min-width: 80px;">Гульні</th>
                             <th class="sortable" data-column="totalPct" title="Агульны працэнт перамог" style="min-width: 60px;">%</th>
                         </tr>
                     </thead>
@@ -2825,6 +3327,27 @@
             });
         }
 
+        // Compare current player with clicked player from partner table
+        function compareWithPlayer(clickedPlayerName) {
+            if (!selectedPlayer1) {
+                console.error('No current player selected');
+                return;
+            }
+            
+            // Enter comparison mode
+            comparisonMode = true;
+            selectedPlayer2 = clickedPlayerName;
+            
+            // Update UI to show comparison mode
+            document.getElementById('secondarySearchContainer').classList.add('show');
+            document.getElementById('closeCompareBtn').style.display = 'flex';
+            document.getElementById('compareBtn').style.display = 'none';
+            document.getElementById('playerSearchInput2').value = clickedPlayerName;
+            
+            // Show comparison stats
+            showComparisonStats(selectedPlayer1, selectedPlayer2);
+        }
+
         // Render comparison stats table
         function renderComparisonTable(stats1, stats2, player1Name, player2Name) {
             const calcPct = (wins, losses) => {
@@ -2866,15 +3389,17 @@
                     <thead>
                         <tr>
                             <th rowspan="2" style="text-align: center;">Роля</th>
-                            <th colspan="3" class="player-column-header">${player1Name}</th>
-                            <th colspan="3" class="player-column-header">${player2Name}</th>
+                            <th colspan="4" class="player-column-header">${player1Name}</th>
+                            <th colspan="4" class="player-column-header">${player2Name}</th>
                         </tr>
                         <tr>
-                            <th>Перамогі</th>
+                            <th style="text-align: center;">Перамогі</th>
                             <th>Паразы</th>
+                            <th>Гульні</th>
                             <th>%</th>
-                            <th>Перамогі</th>
+                            <th style="text-align: center;">Перамогі</th>
                             <th>Паразы</th>
+                            <th>Гульні</th>
                             <th>%</th>
                         </tr>
                     </thead>
@@ -2883,64 +3408,78 @@
                             <td>Мірны жыхар</td>
                             <td class="win-cell">${stats1.byRole.M.wins}</td>
                             <td class="loss-cell">${stats1.byRole.M.losses}</td>
+                            <td>${stats1.byRole.M.wins + stats1.byRole.M.losses}</td>
                             <td class="percentage-cell">${addStar(mPct1, mPct2, mPct1.toFixed(1))}</td>
                             <td class="win-cell">${stats2.byRole.M.wins}</td>
                             <td class="loss-cell">${stats2.byRole.M.losses}</td>
+                            <td>${stats2.byRole.M.wins + stats2.byRole.M.losses}</td>
                             <td class="percentage-cell">${addStar(mPct2, mPct1, mPct2.toFixed(1))}</td>
                         </tr>
                         <tr>
                             <td>Шэрыф</td>
                             <td class="win-cell">${stats1.byRole.Sh.wins}</td>
                             <td class="loss-cell">${stats1.byRole.Sh.losses}</td>
+                            <td>${stats1.byRole.Sh.wins + stats1.byRole.Sh.losses}</td>
                             <td class="percentage-cell">${addStar(shPct1, shPct2, shPct1.toFixed(1))}</td>
                             <td class="win-cell">${stats2.byRole.Sh.wins}</td>
                             <td class="loss-cell">${stats2.byRole.Sh.losses}</td>
+                            <td>${stats2.byRole.Sh.wins + stats2.byRole.Sh.losses}</td>
                             <td class="percentage-cell">${addStar(shPct2, shPct1, shPct2.toFixed(1))}</td>
                         </tr>
                         <tr class="team-row">
                             <td>Агулам за чырвоных</td>
                             <td class="win-cell">${stats1.red.wins}</td>
                             <td class="loss-cell">${stats1.red.losses}</td>
+                            <td>${stats1.red.wins + stats1.red.losses}</td>
                             <td class="percentage-cell">${addStar(redPct1, redPct2, redPct1.toFixed(1))}</td>
                             <td class="win-cell">${stats2.red.wins}</td>
                             <td class="loss-cell">${stats2.red.losses}</td>
+                            <td>${stats2.red.wins + stats2.red.losses}</td>
                             <td class="percentage-cell">${addStar(redPct2, redPct1, redPct2.toFixed(1))}</td>
                         </tr>
                         <tr>
                             <td>Мафія</td>
                             <td class="win-cell">${stats1.byRole.Mf.wins}</td>
                             <td class="loss-cell">${stats1.byRole.Mf.losses}</td>
+                            <td>${stats1.byRole.Mf.wins + stats1.byRole.Mf.losses}</td>
                             <td class="percentage-cell">${addStar(mfPct1, mfPct2, mfPct1.toFixed(1))}</td>
                             <td class="win-cell">${stats2.byRole.Mf.wins}</td>
                             <td class="loss-cell">${stats2.byRole.Mf.losses}</td>
+                            <td>${stats2.byRole.Mf.wins + stats2.byRole.Mf.losses}</td>
                             <td class="percentage-cell">${addStar(mfPct2, mfPct1, mfPct2.toFixed(1))}</td>
                         </tr>
                         <tr>
                             <td>Дон</td>
                             <td class="win-cell">${stats1.byRole.D.wins}</td>
                             <td class="loss-cell">${stats1.byRole.D.losses}</td>
+                            <td>${stats1.byRole.D.wins + stats1.byRole.D.losses}</td>
                             <td class="percentage-cell">${addStar(dPct1, dPct2, dPct1.toFixed(1))}</td>
                             <td class="win-cell">${stats2.byRole.D.wins}</td>
                             <td class="loss-cell">${stats2.byRole.D.losses}</td>
+                            <td>${stats2.byRole.D.wins + stats2.byRole.D.losses}</td>
                             <td class="percentage-cell">${addStar(dPct2, dPct1, dPct2.toFixed(1))}</td>
                         </tr>
                         <tr class="team-row">
                             <td>Агулам за чорных</td>
                             <td class="win-cell">${stats1.black.wins}</td>
                             <td class="loss-cell">${stats1.black.losses}</td>
+                            <td>${stats1.black.wins + stats1.black.losses}</td>
                             <td class="percentage-cell">${addStar(blackPct1, blackPct2, blackPct1.toFixed(1))}</td>
                             <td class="win-cell">${stats2.black.wins}</td>
                             <td class="loss-cell">${stats2.black.losses}</td>
+                            <td>${stats2.black.wins + stats2.black.losses}</td>
                             <td class="percentage-cell">${addStar(blackPct2, blackPct1, blackPct2.toFixed(1))}</td>
                         </tr>
                         <tr class="total-row">
-                            <td>Усяго</td>
-                            <td class="win-cell">${stats1.total.wins}</td>
-                            <td class="loss-cell">${stats1.total.losses}</td>
-                            <td class="percentage-cell">${addStar(totalPct1, totalPct2, totalPct1.toFixed(1))}</td>
-                            <td class="win-cell">${stats2.total.wins}</td>
-                            <td class="loss-cell">${stats2.total.losses}</td>
-                            <td class="percentage-cell">${addStar(totalPct2, totalPct1, totalPct2.toFixed(1))}</td>
+                            <td style="font-weight: bold;">Усяго</td>
+                            <td class="win-cell" style="font-weight: bold;">${stats1.total.wins}</td>
+                            <td class="loss-cell" style="font-weight: bold;">${stats1.total.losses}</td>
+                            <td style="font-weight: bold;">${stats1.total.wins + stats1.total.losses}</td>
+                            <td class="percentage-cell" style="font-weight: bold;">${addStar(totalPct1, totalPct2, totalPct1.toFixed(1))}</td>
+                            <td class="win-cell" style="font-weight: bold;">${stats2.total.wins}</td>
+                            <td class="loss-cell" style="font-weight: bold;">${stats2.total.losses}</td>
+                            <td style="font-weight: bold;">${stats2.total.wins + stats2.total.losses}</td>
+                            <td class="percentage-cell" style="font-weight: bold;">${addStar(totalPct2, totalPct1, totalPct2.toFixed(1))}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -3160,8 +3699,9 @@
                     </div>
                 `;
 
-                // Setup hover handlers after content is rendered
+                // Setup hover and expansion handlers after content is rendered
                 setupPersonalStatsHover();
+                setupPersonalStatsExpansion();
             } catch (error) {
                 console.error('Error loading comparison stats:', error);
                 playerStatsBody.innerHTML = `
@@ -3176,30 +3716,59 @@
             showStatus('Загрузка дадзеных...', 'info');
 
             try {
-                const apiUrl = `${SUPABASE_URL}/rest/v1/player_stats?select=*`;
+                // Fetch all data with pagination to ensure we get everything
+                let allData = [];
+                let pageSize = 1000;
+                let currentPage = 0;
+                let hasMore = true;
                 
-                const response = await fetch(apiUrl, {
-                    method: 'GET',
-                    headers: {
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                while (hasMore) {
+                    const rangeStart = currentPage * pageSize;
+                    const rangeEnd = rangeStart + pageSize - 1;
+                    
+                    const apiUrl = `${SUPABASE_URL}/rest/v1/player_games_view?select=*`;
+                    
+                    const response = await fetch(apiUrl, {
+                        method: 'GET',
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'Range': `${rangeStart}-${rangeEnd}`
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Памылка загрузкі дадзеных. Статус: ${response.status}`);
                     }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Памылка загрузкі дадзеных. Статус: ${response.status}`);
-                }
 
-                const data = await response.json();
-                
-                if (!data || data.length === 0) {
-                    throw new Error('Няма дадзеных у базе. Запусціце import_games.py для загрузкі дадзеных.');
+                    const data = await response.json();
+                    
+                    if (!data || data.length === 0) {
+                        if (currentPage === 0) {
+                            throw new Error('Няма дадзеных у базе. Запусціце import_games.py для загрузкі дадзеных.');
+                        }
+                        break;
+                    }
+                    
+                    allData = allData.concat(data);
+                    console.log(`Loaded page ${currentPage + 1}: ${data.length} games (total so far: ${allData.length})`);
+                    
+                    // If we got less than pageSize, we've reached the end
+                    if (data.length < pageSize) {
+                        hasMore = false;
+                    } else {
+                        currentPage++;
+                    }
                 }
 
                 showStatus('Апрацоўка дадзеных...', 'info');
 
-                // Map database fields to frontend format
-                playerData = data.map(dbRow => mapSupabaseData(dbRow));
+                // Store all games data
+                allGamesData = allData;
+                console.log('✅ Loaded', allGamesData.length, 'games total');
+
+                // Calculate player stats from all games
+                playerData = calculatePlayerDataFromGames(allGamesData);
                 filteredPlayerData = [...playerData];
 
                 // Sort by total games descending by default
@@ -3223,6 +3792,7 @@
                 setupFiltersToggle();
                 setupPlayerFilter();
                 setupGamesFilter();
+                setupDateFilter();
 
             } catch (error) {
                 console.error('Памылка:', error);
