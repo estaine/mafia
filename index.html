@@ -1460,6 +1460,7 @@
         let filterMinGames = 0;
         let filterMaxGames = 100;
         let maxGamesInData = 100;
+        let defaultMinGamesThreshold = 25; // Will be loaded from DB
         let filterMinDate = '';
         let filterMaxDate = '';
         let playerFilterSelectedIndex = -1;
@@ -2233,8 +2234,8 @@
             maxSlider.min = 0;
             maxSlider.max = maxGamesInData;
             
-            // Set initial values (default min = 25)
-            filterMinGames = Math.min(25, maxGamesInData);
+            // Set initial values using threshold from DB
+            filterMinGames = Math.min(defaultMinGamesThreshold, maxGamesInData);
             filterMaxGames = maxGamesInData;
             minSlider.value = filterMinGames;
             maxSlider.value = filterMaxGames;
@@ -3716,6 +3717,32 @@
             showStatus('Загрузка дадзеных...', 'info');
 
             try {
+                // First, fetch the minimum games threshold from settings
+                try {
+                    const settingsUrl = `${SUPABASE_URL}/rest/v1/app_settings?key=eq.min_games_threshold`;
+                    const settingsResponse = await fetch(settingsUrl, {
+                        method: 'GET',
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        }
+                    });
+                    
+                    if (settingsResponse.ok) {
+                        const settingsData = await settingsResponse.json();
+                        if (settingsData && settingsData.length > 0) {
+                            const thresholdValue = parseInt(settingsData[0].value);
+                            if (!isNaN(thresholdValue)) {
+                                defaultMinGamesThreshold = thresholdValue;
+                                console.log('✅ Loaded min games threshold from DB:', defaultMinGamesThreshold);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.log('⚠️ Could not load threshold from DB, using default (25):', error);
+                    // Keep default value of 25
+                }
+                
                 // Fetch all data with pagination to ensure we get everything
                 let allData = [];
                 let pageSize = 1000;

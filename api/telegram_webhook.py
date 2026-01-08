@@ -13,6 +13,8 @@ TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '')
 GITHUB_REPO = os.environ.get('GITHUB_REPO', '')  # Format: "username/repo"
 ALLOWED_USER_IDS = os.environ.get('ALLOWED_USER_IDS', '5980607330,184403698')
+SUPABASE_URL = os.environ.get('SUPABASE_URL', 'https://mpasyybxqvzbnxciejqo.supabase.co')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '')
 
 # Parse allowed user IDs
 ALLOWED_USERS = set(int(uid.strip()) for uid in ALLOWED_USER_IDS.split(',') if uid.strip())
@@ -108,6 +110,48 @@ def trigger_github_workflow(mode: str, chat_id: int) -> bool:
         return False
 
 
+def get_supabase_setting(key: str, default: str = None) -> str:
+    """Get a setting from Supabase app_settings table."""
+    try:
+        url = f"{SUPABASE_URL.rstrip('/')}/rest/v1/app_settings"
+        headers = {
+            'apikey': SUPABASE_KEY,
+            'Authorization': f'Bearer {SUPABASE_KEY}',
+        }
+        params = {'key': f'eq.{key}'}
+        
+        response = requests.get(url, headers=headers, params=params, timeout=10)
+        if response.ok:
+            data = response.json()
+            if data and len(data) > 0:
+                return data[0].get('value', default)
+        return default
+    except Exception as e:
+        print(f"Error getting setting: {e}")
+        return default
+
+
+def update_supabase_setting(key: str, value: str) -> bool:
+    """Update a setting in Supabase app_settings table."""
+    try:
+        url = f"{SUPABASE_URL.rstrip('/')}/rest/v1/rpc/update_setting"
+        headers = {
+            'apikey': SUPABASE_KEY,
+            'Authorization': f'Bearer {SUPABASE_KEY}',
+            'Content-Type': 'application/json'
+        }
+        payload = {
+            'setting_key': key,
+            'setting_value': value
+        }
+        
+        response = requests.post(url, headers=headers, json=payload, timeout=10)
+        return response.ok
+    except Exception as e:
+        print(f"Error updating setting: {e}")
+        return False
+
+
 def handle_start_command(chat_id: int, user_id: int) -> Dict[str, Any]:
     """Handle /start command - show menu with buttons."""
     print(f"handle_start_command: user_id={user_id}, allowed_users={ALLOWED_USERS}")
@@ -122,7 +166,10 @@ def handle_start_command(chat_id: int, user_id: int) -> Dict[str, Any]:
     
     print(f"User {user_id} is authorized, sending menu")
     
-    # Create inline keyboard with two buttons
+    # Get current threshold value
+    current_threshold = get_supabase_setting('min_games_threshold', '25')
+    
+    # Create inline keyboard with three buttons
     keyboard = {
         "inline_keyboard": [
             [
@@ -130,6 +177,9 @@ def handle_start_command(chat_id: int, user_id: int) -> Dict[str, Any]:
             ],
             [
                 {"text": "⚠️ Перазапісаць", "callback_data": "overwrite"}
+            ],
+            [
+                {"text": f"⚙️ Змяніць заліковы мінімум ({current_threshold})", "callback_data": "change_threshold"}
             ]
         ]
     }
@@ -138,12 +188,17 @@ def handle_start_command(chat_id: int, user_id: int) -> Dict[str, Any]:
         "🎭 <b>Mafia Stats Bot</b>\n\n"
         "Выберыце дзеянне:\n\n"
         "<b>Сінхранізаваць</b> - дадаць новыя гульні з табліцы\n"
-        "<b>Перазапісаць</b> - выдаліць усё і загрузіць зноў"
+        "<b>Перазапісаць</b> - выдаліць усё і загрузіць зноў\n"
+        f"<b>Заліковы мінімум</b> - зараз: {current_threshold} гульняў"
     )
     
     success = send_telegram_message(chat_id, message, keyboard)
     print(f"send_telegram_message returned: {success}")
     return {"statusCode": 200}
+
+
+# Store user states for threshold input
+user_states = {}
 
 
 def handle_callback_query(callback_query: Dict) -> Dict[str, Any]:
@@ -163,7 +218,22 @@ def handle_callback_query(callback_query: Dict) -> Dict[str, Any]:
     # Answer the callback query
     answer_callback_query(query_id)
     
-    # Determine mode
+    # Handle different callback types
+    if data == "change_threshold":
+        # Ask user to input new threshold
+        user_states[user_id] = {"waiting_for": "threshold", "message_id": message_id}
+        
+        current_threshold = get_supabase_setting('min_games_threshold', '25')
+        prompt_text = (
+            "⚙️ <b>Змена заліковага мінімуму</b>\n\n"
+            f"Цяперашняе значэнне: <b>{current_threshold}</b> гульняў\n\n"
+            "Увядзіце новае значэнне (лік ад 0 да 100):"
+        )
+        
+        edit_telegram_message(chat_id, message_id, prompt_text)
+        return {"statusCode": 200}
+    
+    # Determine mode for sync operations
     mode = data  # "sync" or "overwrite"
     
     # Update message to show processing
@@ -180,6 +250,52 @@ def handle_callback_query(callback_query: Dict) -> Dict[str, Any]:
     if not success:
         error_text = f"❌ <b>Памылка</b>\n\nНе атрымалася запусціць {mode}."
         edit_telegram_message(chat_id, message_id, error_text)
+    
+    return {"statusCode": 200}
+
+
+def handle_threshold_input(chat_id: int, user_id: int, text: str, message_id: int) -> Dict[str, Any]:
+    """Handle threshold value input from user."""
+    try:
+        # Parse the input
+        threshold = int(text.strip())
+        
+        # Validate range
+        if threshold < 0 or threshold > 100:
+            send_telegram_message(
+                chat_id,
+                "❌ Памылка: лік павінен быць ад 0 да 100.\n\nПаспрабуйце яшчэ раз або выкарыстайце /start для вяртання."
+            )
+            return {"statusCode": 200}
+        
+        # Update the setting in database
+        success = update_supabase_setting('min_games_threshold', str(threshold))
+        
+        if success:
+            response_text = (
+                "✅ <b>Заліковы мінімум зменены!</b>\n\n"
+                f"Новае значэнне: <b>{threshold}</b> гульняў\n\n"
+                "Змены адразу ж адлюструюцца на сайце.\n\n"
+                "Выкарыстайце /start для вяртання ў меню."
+            )
+        else:
+            response_text = (
+                "❌ <b>Памылка</b>\n\n"
+                "Не атрымалася абнавіць налады.\n\n"
+                "Паспрабуйце яшчэ раз ці звяжыцеся з адміністратарам."
+            )
+        
+        send_telegram_message(chat_id, response_text)
+        
+        # Clear user state
+        if user_id in user_states:
+            del user_states[user_id]
+        
+    except ValueError:
+        send_telegram_message(
+            chat_id,
+            "❌ Памылка: увядзіце карэктны лік.\n\nПаспрабуйце яшчэ раз або выкарыстайце /start для вяртання."
+        )
     
     return {"statusCode": 200}
 
@@ -222,10 +338,14 @@ class handler(BaseHTTPRequestHandler):
                 chat_id = message.get("chat", {}).get("id")
                 user_id = message.get("from", {}).get("id")
                 text = message.get("text", "")
+                message_id = message.get("message_id")
                 
                 print(f"Message from user {user_id}: {text}")
                 
-                if text.startswith("/start"):
+                # Check if user is waiting for threshold input
+                if user_id in user_states and user_states[user_id].get("waiting_for") == "threshold":
+                    handle_threshold_input(chat_id, user_id, text, message_id)
+                elif text.startswith("/start"):
                     handle_start_command(chat_id, user_id)
             
             elif "callback_query" in body:

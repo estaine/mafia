@@ -311,6 +311,45 @@ def clear_all_data(api: SupabaseAPI):
         pass
 
 
+def get_setting(api: SupabaseAPI, key: str, default: str = None) -> Optional[str]:
+    """Get a setting value from the app_settings table."""
+    try:
+        result = api.get('app_settings', key=f'eq.{key}')
+        if result and len(result) > 0:
+            return result[0].get('value')
+        return default
+    except Exception:
+        return default
+
+
+def update_setting(api: SupabaseAPI, key: str, value: str) -> bool:
+    """Update a setting value in the app_settings table."""
+    try:
+        # Check if setting exists
+        existing = api.get('app_settings', key=f'eq.{key}')
+        
+        if existing:
+            # Update using RPC function
+            url = f'{api.url}/rest/v1/rpc/update_setting'
+            response = requests.post(
+                url,
+                headers=api.headers,
+                json={'setting_key': key, 'setting_value': value}
+            )
+            response.raise_for_status()
+            return True
+        else:
+            # Insert new setting
+            api.post('app_settings', {
+                'key': key,
+                'value': value
+            })
+            return True
+    except Exception as e:
+        print(f"Error updating setting: {e}")
+        return False
+
+
 def sync_games(mode: str = 'sync') -> Dict[str, any]:
     """
     Main sync function that imports games from spreadsheet to database.
