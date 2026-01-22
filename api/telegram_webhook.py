@@ -50,7 +50,7 @@ def send_telegram_message(chat_id: int, text: str, reply_markup: Dict = None) ->
         return False
 
 
-def edit_telegram_message(chat_id: int, message_id: int, text: str) -> bool:
+def edit_telegram_message(chat_id: int, message_id: int, text: str, reply_markup: Dict = None) -> bool:
     """Edit an existing Telegram message."""
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/editMessageText"
     payload = {
@@ -59,6 +59,8 @@ def edit_telegram_message(chat_id: int, message_id: int, text: str) -> bool:
         "text": text,
         "parse_mode": "HTML"
     }
+    if reply_markup:
+        payload["reply_markup"] = reply_markup
     
     try:
         response = requests.post(url, json=payload, timeout=10)
@@ -152,6 +154,93 @@ def update_supabase_setting(key: str, value: str) -> bool:
         return False
 
 
+def get_all_players() -> list:
+    """Get all players from Supabase."""
+    try:
+        url = f"{SUPABASE_URL.rstrip('/')}/rest/v1/player"
+        headers = {
+            'apikey': SUPABASE_KEY,
+            'Authorization': f'Bearer {SUPABASE_KEY}',
+        }
+        params = {'select': 'id,name,is_hidden', 'order': 'name.asc'}
+        
+        response = requests.get(url, headers=headers, params=params, timeout=10)
+        if response.ok:
+            return response.json()
+        return []
+    except Exception as e:
+        print(f"Error getting players: {e}")
+        return []
+
+
+def get_hidden_players() -> list:
+    """Get all hidden players from Supabase."""
+    try:
+        url = f"{SUPABASE_URL.rstrip('/')}/rest/v1/player"
+        headers = {
+            'apikey': SUPABASE_KEY,
+            'Authorization': f'Bearer {SUPABASE_KEY}',
+        }
+        params = {'select': 'id,name', 'is_hidden': 'eq.true', 'order': 'name.asc'}
+        
+        response = requests.get(url, headers=headers, params=params, timeout=10)
+        if response.ok:
+            return response.json()
+        return []
+    except Exception as e:
+        print(f"Error getting hidden players: {e}")
+        return []
+
+
+def update_player_hidden_status(player_name: str, is_hidden: bool) -> bool:
+    """Update a player's hidden status in Supabase."""
+    try:
+        url = f"{SUPABASE_URL.rstrip('/')}/rest/v1/player"
+        headers = {
+            'apikey': SUPABASE_KEY,
+            'Authorization': f'Bearer {SUPABASE_KEY}',
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+        }
+        params = {'name': f'eq.{player_name}'}
+        payload = {'is_hidden': is_hidden}
+        
+        response = requests.patch(url, headers=headers, params=params, json=payload, timeout=10)
+        return response.ok
+    except Exception as e:
+        print(f"Error updating player hidden status: {e}")
+        return False
+
+
+def clear_all_hidden_players() -> int:
+    """Unhide all hidden players. Returns count of players unhidden."""
+    try:
+        # First, get count of hidden players
+        hidden_players = get_hidden_players()
+        count = len(hidden_players)
+        
+        if count == 0:
+            return 0
+        
+        # Update all hidden players to not hidden
+        url = f"{SUPABASE_URL.rstrip('/')}/rest/v1/player"
+        headers = {
+            'apikey': SUPABASE_KEY,
+            'Authorization': f'Bearer {SUPABASE_KEY}',
+            'Content-Type': 'application/json'
+        }
+        params = {'is_hidden': 'eq.true'}
+        payload = {'is_hidden': False}
+        
+        response = requests.patch(url, headers=headers, params=params, json=payload, timeout=10)
+        if response.ok:
+            return count
+        return 0
+    except Exception as e:
+        print(f"Error clearing hidden players: {e}")
+        return 0
+
+
 def handle_start_command(chat_id: int, user_id: int) -> Dict[str, Any]:
     """Handle /start command - show menu with buttons."""
     print(f"handle_start_command: user_id={user_id}, allowed_users={ALLOWED_USERS}")
@@ -169,7 +258,7 @@ def handle_start_command(chat_id: int, user_id: int) -> Dict[str, Any]:
     # Get current threshold value
     current_threshold = get_supabase_setting('min_games_threshold', '25')
     
-    # Create inline keyboard with three buttons
+    # Create inline keyboard with four buttons
     keyboard = {
         "inline_keyboard": [
             [
@@ -180,6 +269,9 @@ def handle_start_command(chat_id: int, user_id: int) -> Dict[str, Any]:
             ],
             [
                 {"text": f"⚙️ Змяніць заліковы мінімум ({current_threshold})", "callback_data": "change_threshold"}
+            ],
+            [
+                {"text": "👁️ Схаваныя гульцы", "callback_data": "hidden_players_menu"}
             ]
         ]
     }
@@ -189,7 +281,8 @@ def handle_start_command(chat_id: int, user_id: int) -> Dict[str, Any]:
         "Выберыце дзеянне:\n\n"
         "<b>Сінхранізаваць</b> - дадаць новыя гульні з табліцы\n"
         "<b>Перазапісаць</b> - выдаліць усё і загрузіць зноў\n"
-        f"<b>Заліковы мінімум</b> - зараз: {current_threshold} гульняў"
+        f"<b>Заліковы мінімум</b> - зараз: {current_threshold} гульняў\n"
+        "<b>Схаваныя гульцы</b> - кіраванне схаванымі гульцамі"
     )
     
     success = send_telegram_message(chat_id, message, keyboard)
@@ -197,8 +290,45 @@ def handle_start_command(chat_id: int, user_id: int) -> Dict[str, Any]:
     return {"statusCode": 200}
 
 
-# Store user states for threshold input
+# Store user states for threshold input and hidden players management
 user_states = {}
+
+
+def show_hidden_players_menu(chat_id: int, message_id: int = None) -> bool:
+    """Show the hidden players submenu."""
+    keyboard = {
+        "inline_keyboard": [
+            [
+                {"text": "🚫 Схаваць гульца", "callback_data": "hide_player"}
+            ],
+            [
+                {"text": "✅ Адкрыць гульца", "callback_data": "unhide_player"}
+            ],
+            [
+                {"text": "📋 Паказаць спіс схаваных", "callback_data": "view_hidden"}
+            ],
+            [
+                {"text": "🗑️ Ачысціць усё", "callback_data": "clear_hidden"}
+            ],
+            [
+                {"text": "⬅️ Назад", "callback_data": "back_to_main"}
+            ]
+        ]
+    }
+    
+    message = (
+        "👁️ <b>Схаваныя гульцы</b>\n\n"
+        "Выберыце дзеянне:\n\n"
+        "<b>Схаваць гульца</b> - схаваць гульца з галоўнай табліцы\n"
+        "<b>Адкрыць гульца</b> - вярнуць гульца ў табліцу\n"
+        "<b>Паказаць спіс</b> - паглядзець усіх схаваных гульцоў\n"
+        "<b>Ачысціць усё</b> - адкрыць усіх схаваных гульцоў"
+    )
+    
+    if message_id:
+        return edit_telegram_message(chat_id, message_id, message, keyboard)
+    else:
+        return send_telegram_message(chat_id, message, keyboard)
 
 
 def handle_callback_query(callback_query: Dict) -> Dict[str, Any]:
@@ -231,6 +361,79 @@ def handle_callback_query(callback_query: Dict) -> Dict[str, Any]:
         )
         
         edit_telegram_message(chat_id, message_id, prompt_text)
+        return {"statusCode": 200}
+    
+    elif data == "hidden_players_menu":
+        # Show hidden players menu
+        show_hidden_players_menu(chat_id, message_id)
+        return {"statusCode": 200}
+    
+    elif data == "hide_player":
+        # Ask user to input player name to hide
+        user_states[user_id] = {"waiting_for": "hide_player"}
+        prompt_text = (
+            "🚫 <b>Схаваць гульца</b>\n\n"
+            "Увядзіце імя гульца, якога трэба схаваць з галоўнай табліцы:"
+        )
+        edit_telegram_message(chat_id, message_id, prompt_text)
+        return {"statusCode": 200}
+    
+    elif data == "unhide_player":
+        # Ask user to input player name to unhide
+        user_states[user_id] = {"waiting_for": "unhide_player"}
+        prompt_text = (
+            "✅ <b>Адкрыць гульца</b>\n\n"
+            "Увядзіце імя гульца, якога трэба вярнуць у галоўную табліцу:"
+        )
+        edit_telegram_message(chat_id, message_id, prompt_text)
+        return {"statusCode": 200}
+    
+    elif data == "view_hidden":
+        # Show list of hidden players
+        hidden_players = get_hidden_players()
+        
+        if not hidden_players:
+            message_text = (
+                "📋 <b>Спіс схаваных гульцоў</b>\n\n"
+                "Няма схаваных гульцоў.\n\n"
+                "Выкарыстайце /start для вяртання ў меню."
+            )
+        else:
+            player_list = "\n".join([f"• {p['name']}" for p in hidden_players])
+            message_text = (
+                "📋 <b>Спіс схаваных гульцоў</b>\n\n"
+                f"Усяго схавана: <b>{len(hidden_players)}</b>\n\n"
+                f"{player_list}\n\n"
+                "Выкарыстайце /start для вяртання ў меню."
+            )
+        
+        edit_telegram_message(chat_id, message_id, message_text)
+        return {"statusCode": 200}
+    
+    elif data == "clear_hidden":
+        # Clear all hidden players
+        count = clear_all_hidden_players()
+        
+        if count == 0:
+            message_text = (
+                "ℹ️ <b>Няма схаваных гульцоў</b>\n\n"
+                "Усе гульцы ужо адлюстроўваюцца ў табліцы.\n\n"
+                "Выкарыстайце /start для вяртання ў меню."
+            )
+        else:
+            message_text = (
+                "✅ <b>Усе гульцы адкрытыя!</b>\n\n"
+                f"Адкрыта гульцоў: <b>{count}</b>\n\n"
+                "Усе гульцы цяпер будуць адлюстроўвацца ў галоўнай табліцы.\n\n"
+                "Выкарыстайце /start для вяртання ў меню."
+            )
+        
+        edit_telegram_message(chat_id, message_id, message_text)
+        return {"statusCode": 200}
+    
+    elif data == "back_to_main":
+        # Go back to main menu
+        handle_start_command(chat_id, user_id)
         return {"statusCode": 200}
     
     # Determine mode for sync operations
@@ -300,6 +503,130 @@ def handle_threshold_input(chat_id: int, user_id: int, text: str, message_id: in
     return {"statusCode": 200}
 
 
+def handle_hide_player_input(chat_id: int, user_id: int, text: str) -> Dict[str, Any]:
+    """Handle hide player name input from user."""
+    player_name = text.strip()
+    
+    if not player_name:
+        send_telegram_message(
+            chat_id,
+            "❌ Памылка: імя гульца не можа быць пустым.\n\nПаспрабуйце яшчэ раз або выкарыстайце /start для вяртання."
+        )
+        return {"statusCode": 200}
+    
+    # Get all players to check if player exists
+    all_players = get_all_players()
+    player_found = None
+    
+    for player in all_players:
+        if player['name'].lower() == player_name.lower():
+            player_found = player
+            break
+    
+    if not player_found:
+        send_telegram_message(
+            chat_id,
+            f"❌ <b>Гулец не знойдзены</b>\n\nГулец з імем '<b>{player_name}</b>' не знойдзены ў базе дадзеных.\n\nПраверце правапіс і паспрабуйце яшчэ раз або выкарыстайце /start для вяртання."
+        )
+        return {"statusCode": 200}
+    
+    if player_found.get('is_hidden', False):
+        send_telegram_message(
+            chat_id,
+            f"ℹ️ <b>Гулец ужо схаваны</b>\n\nГулец '<b>{player_found['name']}</b>' ужо схаваны.\n\nВыкарыстайце /start для вяртання ў меню."
+        )
+        # Clear user state
+        if user_id in user_states:
+            del user_states[user_id]
+        return {"statusCode": 200}
+    
+    # Update player's hidden status
+    success = update_player_hidden_status(player_found['name'], True)
+    
+    if success:
+        response_text = (
+            f"✅ <b>Гулец схаваны!</b>\n\n"
+            f"Гулец '<b>{player_found['name']}</b>' больш не будзе адлюстроўвацца ў галоўнай табліцы па змаўчанні.\n\n"
+            "Выкарыстайце /start для вяртання ў меню."
+        )
+    else:
+        response_text = (
+            "❌ <b>Памылка</b>\n\n"
+            "Не атрымалася абнавіць статус гульца.\n\n"
+            "Паспрабуйце яшчэ раз ці звяжыцеся з адміністратарам."
+        )
+    
+    send_telegram_message(chat_id, response_text)
+    
+    # Clear user state
+    if user_id in user_states:
+        del user_states[user_id]
+    
+    return {"statusCode": 200}
+
+
+def handle_unhide_player_input(chat_id: int, user_id: int, text: str) -> Dict[str, Any]:
+    """Handle unhide player name input from user."""
+    player_name = text.strip()
+    
+    if not player_name:
+        send_telegram_message(
+            chat_id,
+            "❌ Памылка: імя гульца не можа быць пустым.\n\nПаспрабуйце яшчэ раз або выкарыстайце /start для вяртання."
+        )
+        return {"statusCode": 200}
+    
+    # Get all players to check if player exists
+    all_players = get_all_players()
+    player_found = None
+    
+    for player in all_players:
+        if player['name'].lower() == player_name.lower():
+            player_found = player
+            break
+    
+    if not player_found:
+        send_telegram_message(
+            chat_id,
+            f"❌ <b>Гулец не знойдзены</b>\n\nГулец з імем '<b>{player_name}</b>' не знойдзены ў базе дадзеных.\n\nПраверце правапіс і паспрабуйце яшчэ раз або выкарыстайце /start для вяртання."
+        )
+        return {"statusCode": 200}
+    
+    if not player_found.get('is_hidden', False):
+        send_telegram_message(
+            chat_id,
+            f"ℹ️ <b>Гулец ужо адкрыты</b>\n\nГулец '<b>{player_found['name']}</b>' ужо адлюстроўваецца ў табліцы.\n\nВыкарыстайце /start для вяртання ў меню."
+        )
+        # Clear user state
+        if user_id in user_states:
+            del user_states[user_id]
+        return {"statusCode": 200}
+    
+    # Update player's hidden status
+    success = update_player_hidden_status(player_found['name'], False)
+    
+    if success:
+        response_text = (
+            f"✅ <b>Гулец адкрыты!</b>\n\n"
+            f"Гулец '<b>{player_found['name']}</b>' цяпер будзе адлюстроўвацца ў галоўнай табліцы.\n\n"
+            "Выкарыстайце /start для вяртання ў меню."
+        )
+    else:
+        response_text = (
+            "❌ <b>Памылка</b>\n\n"
+            "Не атрымалася абнавіць статус гульца.\n\n"
+            "Паспрабуйце яшчэ раз ці звяжыцеся з адміністратарам."
+        )
+    
+    send_telegram_message(chat_id, response_text)
+    
+    # Clear user state
+    if user_id in user_states:
+        del user_states[user_id]
+    
+    return {"statusCode": 200}
+
+
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs
 
@@ -342,9 +669,15 @@ class handler(BaseHTTPRequestHandler):
                 
                 print(f"Message from user {user_id}: {text}")
                 
-                # Check if user is waiting for threshold input
-                if user_id in user_states and user_states[user_id].get("waiting_for") == "threshold":
-                    handle_threshold_input(chat_id, user_id, text, message_id)
+                # Check if user is waiting for input
+                if user_id in user_states:
+                    waiting_for = user_states[user_id].get("waiting_for")
+                    if waiting_for == "threshold":
+                        handle_threshold_input(chat_id, user_id, text, message_id)
+                    elif waiting_for == "hide_player":
+                        handle_hide_player_input(chat_id, user_id, text)
+                    elif waiting_for == "unhide_player":
+                        handle_unhide_player_input(chat_id, user_id, text)
                 elif text.startswith("/start"):
                     handle_start_command(chat_id, user_id)
             

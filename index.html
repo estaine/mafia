@@ -167,6 +167,29 @@
             font-weight: 500;
         }
 
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            padding: 10px 0;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin: 0;
+            margin-right: 10px;
+            cursor: pointer;
+            accent-color: #d4af37;
+        }
+
+        .checkbox-label-text {
+            font-size: 14px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
         .player-filter-input-container {
             position: relative;
             border: 1px solid #d0d0d0;
@@ -958,8 +981,8 @@
             height: 30px;
             display: flex;
             border-radius: 4px;
-            overflow: hidden;
-            border: 1px solid #bdc3c7;
+                    overflow: hidden;
+                    border: 1px solid #bdc3c7;
             position: relative;
             background: transparent;
         }
@@ -1385,6 +1408,13 @@
                     />
                 </div>
             </div>
+
+            <div class="filter-row">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="showHiddenCheckbox" />
+                    <span class="checkbox-label-text">Паказваць схаваных</span>
+                </label>
+            </div>
             </div>
         </div>
 
@@ -1465,6 +1495,7 @@
         let filterMaxDate = '';
         let playerFilterSelectedIndex = -1;
         let playerFilterItems = [];
+        let showHiddenPlayers = false; // Track checkbox state for hidden players
 
         function showStatus(message, type = 'info') {
             const status = document.getElementById('status');
@@ -1486,7 +1517,8 @@
                 red: dbRow.red_games || 0,
                 black: dbRow.black_games || 0,
                 total: dbRow.total_games || 0,
-                winPct: parseFloat(dbRow.win_pct) || 0
+                winPct: parseFloat(dbRow.win_pct) || 0,
+                isHidden: dbRow.is_hidden || false
             };
         }
 
@@ -1528,7 +1560,8 @@
                         dPlus: 0, dMinus: 0,
                         red: 0, black: 0,
                         total: 0,
-                        totalWins: 0
+                        totalWins: 0,
+                        isHidden: false  // Default value, will be updated
                     };
                 }
                 
@@ -1567,6 +1600,40 @@
             }));
         }
 
+        // Fetch player hidden statuses and merge into player data
+        async function enrichPlayerDataWithHiddenStatus(playerData) {
+            try {
+                const apiUrl = `${SUPABASE_URL}/rest/v1/player?select=name,is_hidden`;
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    console.error('Failed to fetch player hidden statuses');
+                    return playerData;
+                }
+                
+                const players = await response.json();
+                const hiddenMap = {};
+                players.forEach(p => {
+                    hiddenMap[p.name] = p.is_hidden || false;
+                });
+                
+                // Merge hidden status into player data
+                return playerData.map(player => ({
+                    ...player,
+                    isHidden: hiddenMap[player.name] || false
+                }));
+            } catch (error) {
+                console.error('Error enriching player data:', error);
+                return playerData;
+            }
+        }
+
         function applyFilters() {
             console.log('Applying filters...', {
                 filterMinDate,
@@ -1593,8 +1660,20 @@
                 console.log('After date filter:', filteredGames.length, 'games');
             }
             
+            // Preserve hidden status before recalculation
+            const hiddenStatusMap = {};
+            playerData.forEach(p => {
+                hiddenStatusMap[p.name] = p.isHidden || false;
+            });
+            
             // Recalculate player data from filtered games
             playerData = calculatePlayerDataFromGames(filteredGames);
+            
+            // Restore hidden status
+            playerData.forEach(p => {
+                p.isHidden = hiddenStatusMap[p.name] || false;
+            });
+            
             console.log('After recalc:', playerData.length, 'players');
             
             // Then filter by player names and game count
@@ -1606,6 +1685,11 @@
                 
                 // Filter by minimum and maximum games
                 if (player.total < filterMinGames || player.total > filterMaxGames) {
+                    return false;
+                }
+                
+                // Filter by hidden status (only when checkbox is unchecked)
+                if (!showHiddenPlayers && player.isHidden) {
                     return false;
                 }
                 
@@ -2404,6 +2488,18 @@
                 
                 tempInput.showPicker ? tempInput.showPicker() : tempInput.click();
             });
+        }
+
+        // Setup hidden players checkbox
+        function setupHiddenPlayersFilter() {
+            const checkbox = document.getElementById('showHiddenCheckbox');
+            if (checkbox) {
+                checkbox.addEventListener('change', () => {
+                    showHiddenPlayers = checkbox.checked;
+                    console.log('Show hidden players:', showHiddenPlayers);
+                    applyFilters();
+                });
+            }
         }
 
         // Compare button handler
@@ -3796,6 +3892,9 @@
 
                 // Calculate player stats from all games
                 playerData = calculatePlayerDataFromGames(allGamesData);
+                
+                // Enrich with hidden status from player table
+                playerData = await enrichPlayerDataWithHiddenStatus(playerData);
                 filteredPlayerData = [...playerData];
 
                 // Sort by total games descending by default
@@ -3820,6 +3919,7 @@
                 setupPlayerFilter();
                 setupGamesFilter();
                 setupDateFilter();
+                setupHiddenPlayersFilter();
 
             } catch (error) {
                 console.error('Памылка:', error);
