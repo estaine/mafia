@@ -321,6 +321,9 @@ def show_hidden_players_menu(chat_id: int, message_id: int = None) -> bool:
                 {"text": "📋 Паказаць спіс схаваных", "callback_data": "view_hidden"}
             ],
             [
+                {"text": "👥 Паказаць усіх гульцоў", "callback_data": "view_all_players"}
+            ],
+            [
                 {"text": "🗑️ Ачысціць усё", "callback_data": "clear_hidden"}
             ],
             [
@@ -334,7 +337,8 @@ def show_hidden_players_menu(chat_id: int, message_id: int = None) -> bool:
         "Выберыце дзеянне:\n\n"
         "<b>Схаваць гульца</b> - схаваць гульца з галоўнай табліцы\n"
         "<b>Адкрыць гульца</b> - вярнуць гульца ў табліцу\n"
-        "<b>Паказаць спіс</b> - паглядзець усіх схаваных гульцоў\n"
+        "<b>Паказаць спіс схаваных</b> - паглядзець усіх схаваных гульцоў\n"
+        "<b>Паказаць усіх гульцоў</b> - паглядзець усіх гульцоў (🥷 = схаваны)\n"
         "<b>Ачысціць усё</b> - адкрыць усіх схаваных гульцоў"
     )
     
@@ -431,6 +435,41 @@ def handle_callback_query(callback_query: Dict) -> Dict[str, Any]:
                 "📋 <b>Спіс схаваных гульцоў</b>\n\n"
                 f"Усяго схавана: <b>{len(hidden_players)}</b>\n\n"
                 f"{player_list}\n\n"
+                "Выкарыстайце /start для вяртання ў меню."
+            )
+        
+        edit_telegram_message(chat_id, message_id, message_text)
+        return {"statusCode": 200}
+    
+    elif data == "view_all_players":
+        # Show list of all players with ninja icon for hidden ones
+        all_players = get_all_players()
+        
+        if not all_players:
+            message_text = (
+                "👥 <b>Усе гульцы</b>\n\n"
+                "Няма гульцоў у базе дадзеных.\n\n"
+                "Выкарыстайце /start для вяртання ў меню."
+            )
+        else:
+            # Sort players by name
+            all_players.sort(key=lambda p: p['name'])
+            
+            # Format player list with ninja icon for hidden players
+            player_list = "\n".join([
+                f"🥷 {p['name']}" if p.get('is_hidden', False) else f"• {p['name']}"
+                for p in all_players
+            ])
+            
+            hidden_count = sum(1 for p in all_players if p.get('is_hidden', False))
+            visible_count = len(all_players) - hidden_count
+            
+            message_text = (
+                "👥 <b>Усе гульцы</b>\n\n"
+                f"Усяго гульцоў: <b>{len(all_players)}</b>\n"
+                f"Адкрытых: <b>{visible_count}</b> | Схаваных: <b>{hidden_count}</b>\n\n"
+                f"{player_list}\n\n"
+                "🥷 - схаваны гулец\n\n"
                 "Выкарыстайце /start для вяртання ў меню."
             )
         
