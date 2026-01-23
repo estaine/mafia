@@ -2552,7 +2552,23 @@
             if (checkbox) {
                 checkbox.addEventListener('change', () => {
                     onlyActivePlayersFilter = checkbox.checked;
-                    console.log('Only active players:', onlyActivePlayersFilter);
+                    
+                    // Calculate fromDate for logging
+                    let fromDate = null;
+                    if (lastGameDate && activityPeriodDays) {
+                        const lastDate = new Date(lastGameDate);
+                        const cutoffDate = new Date(lastDate);
+                        cutoffDate.setDate(cutoffDate.getDate() - activityPeriodDays);
+                        fromDate = cutoffDate.toISOString().split('T')[0];
+                    }
+                    
+                    console.log('Only active players filter:', {
+                        enabled: onlyActivePlayersFilter,
+                        activityPeriodDays: activityPeriodDays,
+                        lastGameDate: lastGameDate,
+                        fromDate: fromDate
+                    });
+                    
                     applyFilters();
                 });
             }

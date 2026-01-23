@@ -147,10 +147,16 @@ def update_supabase_setting(key: str, value: str) -> bool:
             'setting_value': value
         }
         
+        print(f"Updating setting: {key} = {value}")
         response = requests.post(url, headers=headers, json=payload, timeout=10)
+        print(f"Update response: status={response.status_code}, ok={response.ok}")
+        if not response.ok:
+            print(f"Update error response: {response.text}")
         return response.ok
     except Exception as e:
         print(f"Error updating setting: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 
