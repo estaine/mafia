@@ -1415,6 +1415,13 @@
                     <span class="checkbox-label-text">Паказваць схаваных</span>
                 </label>
             </div>
+
+            <div class="filter-row">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="onlyActiveCheckbox" />
+                    <span class="checkbox-label-text">Толькі актыўныя</span>
+                </label>
+            </div>
             </div>
         </div>
 
@@ -1496,6 +1503,9 @@
         let playerFilterSelectedIndex = -1;
         let playerFilterItems = [];
         let showHiddenPlayers = false; // Track checkbox state for hidden players
+        let activityPeriodDays = 30; // Will be loaded from DB
+        let onlyActivePlayersFilter = false; // Track checkbox state for active players filter
+        let lastGameDate = null; // Track most recent game date
 
         function showStatus(message, type = 'info') {
             const status = document.getElementById('status');
@@ -1548,9 +1558,12 @@
 
         function calculatePlayerDataFromGames(games) {
             const playerStatsMap = {};
+            let globalLastDate = null;
             
             games.forEach(game => {
                 const playerName = game.player_name;
+                const gameDate = game.game_date;
+                
                 if (!playerStatsMap[playerName]) {
                     playerStatsMap[playerName] = {
                         name: playerName,
@@ -1561,7 +1574,8 @@
                         red: 0, black: 0,
                         total: 0,
                         totalWins: 0,
-                        isHidden: false  // Default value, will be updated
+                        isHidden: false,  // Default value, will be updated
+                        lastPlayedDate: null  // Track last played date for this player
                     };
                 }
                 
@@ -1569,6 +1583,19 @@
                 const won = game.player_won;
                 const role = game.role_code;
                 const isRed = (role === 'M' || role === 'Sh');
+                
+                // Track last played date for this player
+                if (gameDate) {
+                    const gameDateStr = gameDate.split('T')[0]; // Get YYYY-MM-DD part
+                    if (!stats.lastPlayedDate || gameDateStr > stats.lastPlayedDate) {
+                        stats.lastPlayedDate = gameDateStr;
+                    }
+                    
+                    // Track global last game date
+                    if (!globalLastDate || gameDateStr > globalLastDate) {
+                        globalLastDate = gameDateStr;
+                    }
+                }
                 
                 // Update role stats
                 if (role === 'M') {
@@ -1592,6 +1619,10 @@
                 stats.total++;
                 if (won) stats.totalWins++;
             });
+            
+            // Update global last game date
+            lastGameDate = globalLastDate;
+            console.log('📅 Last game date:', lastGameDate);
             
             // Convert to array and calculate win percentages
             return Object.values(playerStatsMap).map(stats => ({
@@ -1691,6 +1722,20 @@
                 // Filter by hidden status (only when checkbox is unchecked)
                 if (!showHiddenPlayers && player.isHidden) {
                     return false;
+                }
+                
+                // Filter by activity period (only when checkbox is checked)
+                if (onlyActivePlayersFilter && lastGameDate && player.lastPlayedDate) {
+                    // Calculate cutoff date: lastGameDate - activityPeriodDays
+                    const lastDate = new Date(lastGameDate);
+                    const cutoffDate = new Date(lastDate);
+                    cutoffDate.setDate(cutoffDate.getDate() - activityPeriodDays);
+                    const cutoffDateStr = cutoffDate.toISOString().split('T')[0];
+                    
+                    // Filter out players whose last played date is before cutoff
+                    if (player.lastPlayedDate < cutoffDateStr) {
+                        return false;
+                    }
                 }
                 
                 return true;
@@ -2497,6 +2542,17 @@
                 checkbox.addEventListener('change', () => {
                     showHiddenPlayers = checkbox.checked;
                     console.log('Show hidden players:', showHiddenPlayers);
+                    applyFilters();
+                });
+            }
+        }
+
+        function setupActivePlayersFilter() {
+            const checkbox = document.getElementById('onlyActiveCheckbox');
+            if (checkbox) {
+                checkbox.addEventListener('change', () => {
+                    onlyActivePlayersFilter = checkbox.checked;
+                    console.log('Only active players:', onlyActivePlayersFilter);
                     applyFilters();
                 });
             }
@@ -3839,6 +3895,32 @@
                     // Keep default value of 25
                 }
                 
+                // Fetch the activity period from settings
+                try {
+                    const activitySettingsUrl = `${SUPABASE_URL}/rest/v1/app_settings?key=eq.activity_period_days`;
+                    const activitySettingsResponse = await fetch(activitySettingsUrl, {
+                        method: 'GET',
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        }
+                    });
+                    
+                    if (activitySettingsResponse.ok) {
+                        const activitySettingsData = await activitySettingsResponse.json();
+                        if (activitySettingsData && activitySettingsData.length > 0) {
+                            const activityPeriodValue = parseInt(activitySettingsData[0].value);
+                            if (!isNaN(activityPeriodValue)) {
+                                activityPeriodDays = activityPeriodValue;
+                                console.log('✅ Loaded activity period from DB:', activityPeriodDays);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.log('⚠️ Could not load activity period from DB, using default (30):', error);
+                    // Keep default value of 30
+                }
+                
                 // Fetch all data with pagination to ensure we get everything
                 let allData = [];
                 let pageSize = 1000;
@@ -3920,6 +4002,7 @@
                 setupGamesFilter();
                 setupDateFilter();
                 setupHiddenPlayersFilter();
+                setupActivePlayersFilter();
 
             } catch (error) {
                 console.error('Памылка:', error);

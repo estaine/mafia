@@ -258,7 +258,10 @@ def handle_start_command(chat_id: int, user_id: int) -> Dict[str, Any]:
     # Get current threshold value
     current_threshold = get_supabase_setting('min_games_threshold', '25')
     
-    # Create inline keyboard with four buttons
+    # Get current activity period value
+    current_activity_period = get_supabase_setting('activity_period_days', '30')
+    
+    # Create inline keyboard with five buttons
     keyboard = {
         "inline_keyboard": [
             [
@@ -269,6 +272,9 @@ def handle_start_command(chat_id: int, user_id: int) -> Dict[str, Any]:
             ],
             [
                 {"text": f"⚙️ Змяніць заліковы мінімум ({current_threshold})", "callback_data": "change_threshold"}
+            ],
+            [
+                {"text": f"⏰ Змяніць перыяд актыўнасці ({current_activity_period})", "callback_data": "change_activity_period"}
             ],
             [
                 {"text": "👁️ Схаваныя гульцы", "callback_data": "hidden_players_menu"}
@@ -282,6 +288,7 @@ def handle_start_command(chat_id: int, user_id: int) -> Dict[str, Any]:
         "<b>Сінхранізаваць</b> - дадаць новыя гульні з табліцы\n"
         "<b>Перазапісаць</b> - выдаліць усё і загрузіць зноў\n"
         f"<b>Заліковы мінімум</b> - зараз: {current_threshold} гульняў\n"
+        f"<b>Перыяд актыўнасці</b> - зараз: {current_activity_period} дзён\n"
         "<b>Схаваныя гульцы</b> - кіраванне схаванымі гульцамі"
     )
     
@@ -358,6 +365,20 @@ def handle_callback_query(callback_query: Dict) -> Dict[str, Any]:
             "⚙️ <b>Змена заліковага мінімуму</b>\n\n"
             f"Цяперашняе значэнне: <b>{current_threshold}</b> гульняў\n\n"
             "Увядзіце новае значэнне (лік ад 0 да 100):"
+        )
+        
+        edit_telegram_message(chat_id, message_id, prompt_text)
+        return {"statusCode": 200}
+    
+    elif data == "change_activity_period":
+        # Ask user to input new activity period
+        user_states[user_id] = {"waiting_for": "activity_period", "message_id": message_id}
+        
+        current_activity_period = get_supabase_setting('activity_period_days', '30')
+        prompt_text = (
+            "⏰ <b>Змена перыяду актыўнасці</b>\n\n"
+            f"Цяперашняе значэнне: <b>{current_activity_period}</b> дзён\n\n"
+            "Увядзіце новае значэнне (лік ад 1 да 365):"
         )
         
         edit_telegram_message(chat_id, message_id, prompt_text)
@@ -478,6 +499,52 @@ def handle_threshold_input(chat_id: int, user_id: int, text: str, message_id: in
             response_text = (
                 "✅ <b>Заліковы мінімум зменены!</b>\n\n"
                 f"Новае значэнне: <b>{threshold}</b> гульняў\n\n"
+                "Змены адразу ж адлюструюцца на сайце.\n\n"
+                "Выкарыстайце /start для вяртання ў меню."
+            )
+        else:
+            response_text = (
+                "❌ <b>Памылка</b>\n\n"
+                "Не атрымалася абнавіць налады.\n\n"
+                "Паспрабуйце яшчэ раз ці звяжыцеся з адміністратарам."
+            )
+        
+        send_telegram_message(chat_id, response_text)
+        
+        # Clear user state
+        if user_id in user_states:
+            del user_states[user_id]
+        
+    except ValueError:
+        send_telegram_message(
+            chat_id,
+            "❌ Памылка: увядзіце карэктны лік.\n\nПаспрабуйце яшчэ раз або выкарыстайце /start для вяртання."
+        )
+    
+    return {"statusCode": 200}
+
+
+def handle_activity_period_input(chat_id: int, user_id: int, text: str, message_id: int) -> Dict[str, Any]:
+    """Handle activity period value input from user."""
+    try:
+        # Parse the input
+        period = int(text.strip())
+        
+        # Validate range
+        if period < 1 or period > 365:
+            send_telegram_message(
+                chat_id,
+                "❌ Памылка: лік павінен быць ад 1 да 365.\n\nПаспрабуйце яшчэ раз або выкарыстайце /start для вяртання."
+            )
+            return {"statusCode": 200}
+        
+        # Update the setting in database
+        success = update_supabase_setting('activity_period_days', str(period))
+        
+        if success:
+            response_text = (
+                "✅ <b>Перыяд актыўнасці зменены!</b>\n\n"
+                f"Новае значэнне: <b>{period}</b> дзён\n\n"
                 "Змены адразу ж адлюструюцца на сайце.\n\n"
                 "Выкарыстайце /start для вяртання ў меню."
             )
@@ -674,6 +741,8 @@ class handler(BaseHTTPRequestHandler):
                     waiting_for = user_states[user_id].get("waiting_for")
                     if waiting_for == "threshold":
                         handle_threshold_input(chat_id, user_id, text, message_id)
+                    elif waiting_for == "activity_period":
+                        handle_activity_period_input(chat_id, user_id, text, message_id)
                     elif waiting_for == "hide_player":
                         handle_hide_player_input(chat_id, user_id, text)
                     elif waiting_for == "unhide_player":
