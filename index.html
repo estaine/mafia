@@ -411,6 +411,50 @@
             font-size: 14px;
         }
 
+        #dataTable {
+            table-layout: fixed;
+        }
+
+        #dataTable th:first-child {
+            width: 120px;
+        }
+
+        #dataTable th[data-column="mPlus"],
+        #dataTable th[data-column="mMinus"],
+        #dataTable th[data-column="shPlus"],
+        #dataTable th[data-column="shMinus"],
+        #dataTable th[data-column="mfPlus"],
+        #dataTable th[data-column="mfMinus"],
+        #dataTable th[data-column="dPlus"],
+        #dataTable th[data-column="dMinus"],
+        #dataTable th[data-column="redWins"],
+        #dataTable th[data-column="redLosses"],
+        #dataTable th[data-column="blackWins"],
+        #dataTable th[data-column="blackLosses"],
+        #dataTable th[data-column="totalWins"],
+        #dataTable th[data-column="totalLosses"] {
+            width: 55px;
+        }
+
+        #dataTable th[data-column="red"],
+        #dataTable th[data-column="black"] {
+            width: 55px;
+        }
+
+        #dataTable th[data-column="redPct"],
+        #dataTable th[data-column="blackPct"],
+        #dataTable th[data-column="winPct"] {
+            width: 65px;
+        }
+
+        #dataTable th[data-column="total"] {
+            width: 80px;
+        }
+
+        #dataTable td:first-child {
+            width: 120px;
+        }
+
         thead {
             position: sticky;
             top: 0;
@@ -1234,7 +1278,7 @@
         }
 
         .total-separator {
-            border-left: 3px solid #d4af37 !important;
+            border-left: 3px solid #e0e0e0 !important;
         }
 
         @media (max-width: 768px) {
