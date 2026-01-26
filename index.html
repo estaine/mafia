@@ -2581,11 +2581,21 @@
         playerSearchInput2.addEventListener('input', (e) => {
             const searchTerm = e.target.value.trim();
             if (searchTerm.length === 0) {
-                closeAutocomplete2();
+                // Show all players sorted alphabetically when input is empty
+                const allPlayers = filterPlayers('', selectedPlayer1);
+                const sortedPlayers = [...allPlayers].sort((a, b) => a.name.localeCompare(b.name));
+                renderAutocomplete(sortedPlayers, true);
                 return;
             }
             const filtered = filterPlayers(searchTerm, selectedPlayer1);
             renderAutocomplete(filtered, true);
+        });
+
+        // Show all players sorted alphabetically when focusing on second player input
+        playerSearchInput2.addEventListener('focus', (e) => {
+            const allPlayers = filterPlayers('', selectedPlayer1);
+            const sortedPlayers = [...allPlayers].sort((a, b) => a.name.localeCompare(b.name));
+            renderAutocomplete(sortedPlayers, true);
         });
 
         // Handle keyboard navigation in first autocomplete
