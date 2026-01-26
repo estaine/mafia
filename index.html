@@ -1468,10 +1468,57 @@
                 padding: 15px 20px;
             }
 
+            .comparison-table {
+                table-layout: auto !important;
+                width: 100% !important;
+            }
+
             .comparison-table th,
             .comparison-table td {
-                font-size: 11px;
-                padding: 6px 4px;
+                padding: 5px 2px !important;
+                font-size: 9px !important;
+            }
+
+            /* First column - role names */
+            .comparison-table th:first-child,
+            .comparison-table td:first-child {
+                width: 35px !important;
+                max-width: 35px !important;
+                min-width: 35px !important;
+                font-size: 7px !important;
+                padding: 2px 1px !important;
+                word-break: break-word;
+                line-height: 1;
+                overflow: hidden;
+                text-overflow: clip;
+            }
+
+            /* Data columns: +, -, Σ - all same width */
+            .comparison-table th:nth-child(2),
+            .comparison-table td:nth-child(2),
+            .comparison-table th:nth-child(3),
+            .comparison-table td:nth-child(3),
+            .comparison-table th:nth-child(4),
+            .comparison-table td:nth-child(4),
+            .comparison-table th:nth-child(6),
+            .comparison-table td:nth-child(6),
+            .comparison-table th:nth-child(7),
+            .comparison-table td:nth-child(7),
+            .comparison-table th:nth-child(8),
+            .comparison-table td:nth-child(8) {
+                width: 32px !important;
+                max-width: 32px !important;
+                min-width: 32px !important;
+            }
+
+            /* Percentage columns - twice as wide */
+            .comparison-table th:nth-child(5),
+            .comparison-table td:nth-child(5),
+            .comparison-table th:nth-child(9),
+            .comparison-table td:nth-child(9) {
+                width: 40px !important;
+                max-width: 40px !important;
+                min-width: 40px !important;
             }
 
             .personal-stats-table th,
@@ -1498,6 +1545,181 @@
                 font-size: 12px;
                 width: 100%;
                 text-align: center;
+            }
+
+            /* Mobile optimizations for stats-table (Агульная статыстыка) */
+            .stats-table th:nth-child(2) {
+                font-size: 0;
+            }
+
+            .stats-table th:nth-child(2)::after {
+                content: '+';
+                font-size: 13px;
+                font-weight: bold;
+            }
+
+            .stats-table th:nth-child(3) {
+                font-size: 0;
+            }
+
+            .stats-table th:nth-child(3)::after {
+                content: '−';
+                font-size: 13px;
+                font-weight: bold;
+            }
+
+            .stats-table th:nth-child(4) {
+                font-size: 0;
+            }
+
+            .stats-table th:nth-child(4)::after {
+                content: 'Σ';
+                font-size: 13px;
+                font-weight: bold;
+            }
+
+            /* Mobile optimizations for partner/opponent table - shorten column headers */
+            #partnerOpponentTable thead tr:nth-child(2) th:nth-child(1),
+            #partnerOpponentTable thead tr:nth-child(2) th:nth-child(5),
+            #partnerOpponentTable thead tr:nth-child(2) th:nth-child(9) {
+                font-size: 0;
+            }
+
+            #partnerOpponentTable thead tr:nth-child(2) th:nth-child(1)::after,
+            #partnerOpponentTable thead tr:nth-child(2) th:nth-child(5)::after,
+            #partnerOpponentTable thead tr:nth-child(2) th:nth-child(9)::after {
+                content: '+';
+                font-size: 12px;
+                font-weight: bold;
+            }
+
+            #partnerOpponentTable thead tr:nth-child(2) th:nth-child(2),
+            #partnerOpponentTable thead tr:nth-child(2) th:nth-child(6),
+            #partnerOpponentTable thead tr:nth-child(2) th:nth-child(10) {
+                font-size: 0;
+            }
+
+            #partnerOpponentTable thead tr:nth-child(2) th:nth-child(2)::after,
+            #partnerOpponentTable thead tr:nth-child(2) th:nth-child(6)::after,
+            #partnerOpponentTable thead tr:nth-child(2) th:nth-child(10)::after {
+                content: '−';
+                font-size: 12px;
+                font-weight: bold;
+            }
+
+            #partnerOpponentTable thead tr:nth-child(2) th:nth-child(3),
+            #partnerOpponentTable thead tr:nth-child(2) th:nth-child(7),
+            #partnerOpponentTable thead tr:nth-child(2) th:nth-child(11) {
+                font-size: 0;
+            }
+
+            #partnerOpponentTable thead tr:nth-child(2) th:nth-child(3)::after,
+            #partnerOpponentTable thead tr:nth-child(2) th:nth-child(7)::after,
+            #partnerOpponentTable thead tr:nth-child(2) th:nth-child(11)::after {
+                content: 'Σ';
+                font-size: 12px;
+                font-weight: bold;
+            }
+
+            /* Mobile optimizations for games-table (Гісторыя гульняў) */
+            .games-table {
+                table-layout: fixed;
+            }
+
+            .games-table th:nth-child(1),
+            .games-table td:nth-child(1) {
+                width: 45px !important;
+                max-width: 45px !important;
+                min-width: 45px !important;
+                padding: 8px 2px !important;
+            }
+
+            .games-table th:nth-child(1) {
+                font-size: 0;
+            }
+
+            .games-table th:nth-child(1)::after {
+                content: '#';
+                font-size: 13px;
+                font-weight: bold;
+            }
+
+            /* Mobile optimizations for partner table - stable column widths */
+            #partnerOpponentTable {
+                table-layout: fixed;
+                width: 100%;
+            }
+
+            #partnerOpponentTable th:nth-child(1),
+            #partnerOpponentTable td:nth-child(1) {
+                width: 35%;
+            }
+
+            #partnerOpponentTable th:nth-child(2),
+            #partnerOpponentTable td:nth-child(2) {
+                width: 15%;
+            }
+
+            #partnerOpponentTable th:nth-child(3),
+            #partnerOpponentTable td:nth-child(3) {
+                width: 15%;
+            }
+
+            #partnerOpponentTable th:nth-child(4),
+            #partnerOpponentTable td:nth-child(4) {
+                width: 15%;
+            }
+
+            #partnerOpponentTable th:nth-child(5),
+            #partnerOpponentTable td:nth-child(5) {
+                width: 20%;
+            }
+
+            /* Mobile optimizations for comparison table - shorten column headers */
+            /* Second row has no first column due to rowspan, so indices are: 1=wins1, 2=losses1, 3=games1, 4=%1, 5=wins2, 6=losses2, 7=games2, 8=%2 */
+            .comparison-table thead tr:nth-child(2) th:nth-child(1),
+            .comparison-table thead tr:nth-child(2) th:nth-child(5) {
+                font-size: 0 !important;
+            }
+
+            .comparison-table thead tr:nth-child(2) th:nth-child(1)::after,
+            .comparison-table thead tr:nth-child(2) th:nth-child(5)::after {
+                content: '+';
+                font-size: 11px;
+                font-weight: bold;
+            }
+
+            .comparison-table thead tr:nth-child(2) th:nth-child(2),
+            .comparison-table thead tr:nth-child(2) th:nth-child(6) {
+                font-size: 0 !important;
+            }
+
+            .comparison-table thead tr:nth-child(2) th:nth-child(2)::after,
+            .comparison-table thead tr:nth-child(2) th:nth-child(6)::after {
+                content: '−';
+                font-size: 11px;
+                font-weight: bold;
+            }
+
+            .comparison-table thead tr:nth-child(2) th:nth-child(3),
+            .comparison-table thead tr:nth-child(2) th:nth-child(7) {
+                font-size: 0 !important;
+            }
+
+            .comparison-table thead tr:nth-child(2) th:nth-child(3)::after,
+            .comparison-table thead tr:nth-child(2) th:nth-child(7)::after {
+                content: 'Σ';
+                font-size: 11px;
+                font-weight: bold;
+            }
+
+            /* Mobile optimizations for personal stats table - wrapper provides horizontal scrolling */
+            .personal-stats-wrapper {
+                margin-bottom: 20px;
+            }
+
+            .personal-stats-table {
+                min-width: 600px;
             }
         }
     </style>
@@ -2177,6 +2399,7 @@
         // Partner/Opponent table state
         let partnerTableData = [];
         let partnerTableSort = { column: 'totalTotal', ascending: false };
+        let partnerSectionMode = 'total'; // 'together', 'against', 'total'
 
         // Navigation Control Functions
         function showPlayerStatsView() {
@@ -3395,83 +3618,85 @@
             const diffColorTooltip = diffColorTotal > 0 ? `Агулам за розныя колеры: ${diffColorWins} ${diffColorWinsForm} у ${diffColorTotal} ${diffColorGamesForm} (${diffColorPct}%)` : '';
 
             return `
-                <table class="personal-stats-table" id="personalStatsTable">
-                    <thead>
-                        <tr>
-                            <th>${player1Name}</th>
-                            <th>${player2Name}</th>
-                            <th>Статыстыка</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr data-row="0" class="expandable-row" data-expandable="true">
-                            <td data-color="red"><span class="expansion-indicator">▶</span> <span class="color-indicator color-red"></span></td>
-                            <td data-color="red"><span class="color-indicator color-red"></span></td>
-                            <td>${renderStatBar(h2hStats.redRed.wins, h2hStats.redRed.losses, 'stat-bar-red', 0, {
-                                rowType: 'both-red',
-                                player1: player1Name,
-                                player2: player2Name
-                            })}</td>
-                        </tr>
-                        ${renderRoleDetailRows(h2hStats.redRed.roles, 0, player1Name, player2Name)}
-                        <tr data-row="1" class="expandable-row" data-expandable="true">
-                            <td data-color="black"><span class="expansion-indicator">▶</span> <span class="color-indicator color-black"></span></td>
-                            <td data-color="black"><span class="color-indicator color-black"></span></td>
-                            <td>${renderStatBar(h2hStats.blackBlack.wins, h2hStats.blackBlack.losses, 'stat-bar-black', 1, {
-                                rowType: 'both-black',
-                                player1: player1Name,
-                                player2: player2Name
-                            })}</td>
-                        </tr>
-                        ${renderRoleDetailRows(h2hStats.blackBlack.roles, 1, player1Name, player2Name)}
-                        <tr class="summary-row" data-row="summary-same">
-                            <td colspan="2">Агулам за адзін колер</td>
-                            <td>${renderStatBar(sameColorWins, sameColorLosses, sameColorBarClass, 'summary-same', {
-                                rowType: 'summary-same',
-                                player1: player1Name,
-                                player2: player2Name
-                            }, false, {
-                                win: 'stat-bar-gold',
-                                loss: 'stat-bar-silver',
-                                winColor: 'gold',
-                                lossColor: 'silver'
-                            })}</td>
-                        </tr>
-                        <tr data-row="2" class="expandable-row" data-expandable="true">
-                            <td data-color="red"><span class="expansion-indicator">▶</span> <span class="color-indicator color-red"></span></td>
-                            <td data-color="black"><span class="color-indicator color-black"></span></td>
-                            <td>${renderStatBar(h2hStats.redBlack.wins, h2hStats.redBlack.losses, 'stat-bar-red', 2, {
-                                rowType: 'p1-red-p2-black',
-                                player1: player1Name,
-                                player2: player2Name
-                            })}</td>
-                        </tr>
-                        ${renderRoleDetailRows(h2hStats.redBlack.roles, 2, player1Name, player2Name)}
-                        <tr data-row="3" class="expandable-row" data-expandable="true">
-                            <td data-color="black"><span class="expansion-indicator">▶</span> <span class="color-indicator color-black"></span></td>
-                            <td data-color="red"><span class="color-indicator color-red"></span></td>
-                            <td>${renderStatBar(h2hStats.blackRed.losses, h2hStats.blackRed.wins, 'stat-bar-black', 3, {
-                                rowType: 'p1-black-p2-red',
-                                player1: player1Name,
-                                player2: player2Name
-                            })}</td>
-                        </tr>
-                        ${renderRoleDetailRows(h2hStats.blackRed.roles, 3, player1Name, player2Name)}
-                        <tr class="summary-row" data-row="summary-diff">
-                            <td colspan="2">Агулам за розныя колеры</td>
-                            <td>${renderStatBar(diffColorWins, diffColorLosses, diffColorBarClass, 'summary-diff', {
-                                rowType: 'summary-diff',
-                                player1: player1Name,
-                                player2: player2Name
-                            }, false, {
-                                win: 'stat-bar-green',
-                                loss: 'stat-bar-blue',
-                                winColor: 'green',
-                                lossColor: 'blue'
-                            })}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="personal-stats-wrapper" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <table class="personal-stats-table" id="personalStatsTable">
+                        <thead>
+                            <tr>
+                                <th>${player1Name}</th>
+                                <th>${player2Name}</th>
+                                <th>Статыстыка</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr data-row="0" class="expandable-row" data-expandable="true">
+                                <td data-color="red"><span class="expansion-indicator">▶</span> <span class="color-indicator color-red"></span></td>
+                                <td data-color="red"><span class="color-indicator color-red"></span></td>
+                                <td>${renderStatBar(h2hStats.redRed.wins, h2hStats.redRed.losses, 'stat-bar-red', 0, {
+                                    rowType: 'both-red',
+                                    player1: player1Name,
+                                    player2: player2Name
+                                })}</td>
+                            </tr>
+                            ${renderRoleDetailRows(h2hStats.redRed.roles, 0, player1Name, player2Name)}
+                            <tr data-row="1" class="expandable-row" data-expandable="true">
+                                <td data-color="black"><span class="expansion-indicator">▶</span> <span class="color-indicator color-black"></span></td>
+                                <td data-color="black"><span class="color-indicator color-black"></span></td>
+                                <td>${renderStatBar(h2hStats.blackBlack.wins, h2hStats.blackBlack.losses, 'stat-bar-black', 1, {
+                                    rowType: 'both-black',
+                                    player1: player1Name,
+                                    player2: player2Name
+                                })}</td>
+                            </tr>
+                            ${renderRoleDetailRows(h2hStats.blackBlack.roles, 1, player1Name, player2Name)}
+                            <tr class="summary-row" data-row="summary-same">
+                                <td colspan="2">Агулам за адзін колер</td>
+                                <td>${renderStatBar(sameColorWins, sameColorLosses, sameColorBarClass, 'summary-same', {
+                                    rowType: 'summary-same',
+                                    player1: player1Name,
+                                    player2: player2Name
+                                }, false, {
+                                    win: 'stat-bar-gold',
+                                    loss: 'stat-bar-silver',
+                                    winColor: 'gold',
+                                    lossColor: 'silver'
+                                })}</td>
+                            </tr>
+                            <tr data-row="2" class="expandable-row" data-expandable="true">
+                                <td data-color="red"><span class="expansion-indicator">▶</span> <span class="color-indicator color-red"></span></td>
+                                <td data-color="black"><span class="color-indicator color-black"></span></td>
+                                <td>${renderStatBar(h2hStats.redBlack.wins, h2hStats.redBlack.losses, 'stat-bar-red', 2, {
+                                    rowType: 'p1-red-p2-black',
+                                    player1: player1Name,
+                                    player2: player2Name
+                                })}</td>
+                            </tr>
+                            ${renderRoleDetailRows(h2hStats.redBlack.roles, 2, player1Name, player2Name)}
+                            <tr data-row="3" class="expandable-row" data-expandable="true">
+                                <td data-color="black"><span class="expansion-indicator">▶</span> <span class="color-indicator color-black"></span></td>
+                                <td data-color="red"><span class="color-indicator color-red"></span></td>
+                                <td>${renderStatBar(h2hStats.blackRed.losses, h2hStats.blackRed.wins, 'stat-bar-black', 3, {
+                                    rowType: 'p1-black-p2-red',
+                                    player1: player1Name,
+                                    player2: player2Name
+                                })}</td>
+                            </tr>
+                            ${renderRoleDetailRows(h2hStats.blackRed.roles, 3, player1Name, player2Name)}
+                            <tr class="summary-row" data-row="summary-diff">
+                                <td colspan="2">Агулам за розныя колеры</td>
+                                <td>${renderStatBar(diffColorWins, diffColorLosses, diffColorBarClass, 'summary-diff', {
+                                    rowType: 'summary-diff',
+                                    player1: player1Name,
+                                    player2: player2Name
+                                }, false, {
+                                    win: 'stat-bar-green',
+                                    loss: 'stat-bar-blue',
+                                    winColor: 'green',
+                                    lossColor: 'blue'
+                                })}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             `;
         }
 
@@ -3629,12 +3854,84 @@
 
             currentPartnerPage = page;
 
+            // Check if mobile
+            const isMobile = window.innerWidth <= 768;
+
             // Calculate pagination
             const totalPages = Math.ceil(partnerStats.length / partnersPerPage);
             const startIdx = (page - 1) * partnersPerPage;
             const endIdx = startIdx + partnersPerPage;
             const paginatedPartners = partnerStats.slice(startIdx, endIdx);
 
+            // Mobile: render based on current section mode
+            if (isMobile) {
+                const sectionNames = {
+                    'together': 'Разам',
+                    'against': 'Супраць',
+                    'total': 'Агулам'
+                };
+
+                const columnPrefixes = {
+                    'together': 'together',
+                    'against': 'against',
+                    'total': 'total'
+                };
+
+                const currentSection = partnerSectionMode;
+                const currentSectionName = sectionNames[currentSection];
+                const columnPrefix = columnPrefixes[currentSection];
+
+                const rows = paginatedPartners.map(player => {
+                    const data = player[columnPrefix];
+                    return `
+                        <tr>
+                            <td class="partner-player-cell" style="text-align: left;" onclick="compareWithPlayer('${player.name.replace(/'/g, "\\'")}')">
+                                <span class="partner-player-name">${player.name}</span>
+                            </td>
+                            <td class="win-cell">${data.wins}</td>
+                            <td class="loss-cell">${data.losses}</td>
+                            <td>${data.total}</td>
+                            <td class="percentage-cell">${calcPct(data.wins, data.losses)}%</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                // Pagination controls
+                const paginationHTML = partnerStats.length > partnersPerPage ? `
+                    <div class="pagination">
+                        <button class="pagination-btn" ${page === 1 ? 'disabled' : ''} onclick="goToPartnerPage(1)">«</button>
+                        <button class="pagination-btn" ${page === 1 ? 'disabled' : ''} onclick="goToPartnerPage(${page - 1})">‹</button>
+                        <span class="pagination-info">Старонка ${page} з ${totalPages} (усяго гульцоў: ${partnerStats.length})</span>
+                        <button class="pagination-btn" ${page === totalPages ? 'disabled' : ''} onclick="goToPartnerPage(${page + 1})">›</button>
+                        <button class="pagination-btn" ${page === totalPages ? 'disabled' : ''} onclick="goToPartnerPage(${totalPages})">»</button>
+                    </div>
+                ` : '';
+
+                return `
+                    <div class="partner-section-nav" style="display: flex; align-items: center; justify-content: center; margin-bottom: 15px; gap: 10px;">
+                        <button class="pagination-btn" onclick="switchPartnerSection('prev')" style="font-size: 1.2em;">‹</button>
+                        <span style="font-size: 1.1em; font-weight: 600; min-width: 100px; text-align: center;">${currentSectionName}</span>
+                        <button class="pagination-btn" onclick="switchPartnerSection('next')" style="font-size: 1.2em;">›</button>
+                    </div>
+                    <table class="stats-table" id="partnerOpponentTable">
+                        <thead>
+                            <tr>
+                                <th style="text-align: center;">Гулец</th>
+                                <th>Перамогі</th>
+                                <th>Паразы</th>
+                                <th>Гульні</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows}
+                        </tbody>
+                    </table>
+                    ${paginationHTML}
+                `;
+            }
+
+            // Desktop: render all sections
             const rows = paginatedPartners.map(player => {
                 return `
                     <tr>
@@ -3708,6 +4005,28 @@
                 partnerSection.innerHTML = `<h3>Партнёры і супернікі</h3>${newTableHTML}`;
                 setupPartnerTableSorting();
                 updatePartnerTableSortIndicators();
+            }
+        }
+
+        // Switch partner table section mode (mobile only)
+        function switchPartnerSection(direction) {
+            const sections = ['together', 'against', 'total'];
+            const currentIndex = sections.indexOf(partnerSectionMode);
+            
+            let newIndex;
+            if (direction === 'next') {
+                newIndex = (currentIndex + 1) % sections.length;
+            } else if (direction === 'prev') {
+                newIndex = (currentIndex - 1 + sections.length) % sections.length;
+            }
+            
+            partnerSectionMode = sections[newIndex];
+            
+            // Re-render the partner table
+            const partnerSection = document.querySelector('.stats-section:has(#partnerOpponentTable)');
+            if (partnerSection) {
+                const newTableHTML = renderPartnerOpponentTable(partnerTableData, currentPartnerPage);
+                partnerSection.innerHTML = `<h3>Партнёры і супернікі</h3>${newTableHTML}`;
             }
         }
 
@@ -3819,11 +4138,24 @@
                 return total > 0 ? (wins / total * 100) : 0;
             };
 
-            const addStar = (thisPct, otherPct, value) => {
-                if (thisPct > otherPct && thisPct > 0) {
-                    return `${value}% ⭐`;
+            const isMobile = window.innerWidth <= 768;
+
+            const formatPercent = (thisPct, otherPct, value) => {
+                if (isMobile) {
+                    // Mobile: use bold for larger value
+                    if (thisPct > otherPct) {
+                        return `<strong>${value}%</strong>`;
+                    } else if (thisPct === otherPct) {
+                        return `<strong>${value}%</strong>`;
+                    }
+                    return `${value}%`;
+                } else {
+                    // Desktop: use star for larger value
+                    if (thisPct > otherPct && thisPct > 0) {
+                        return `${value}% ⭐`;
+                    }
+                    return `${value}%`;
                 }
-                return `${value}%`;
             };
 
             // Calculate percentages for each row
@@ -3848,11 +4180,13 @@
             const totalPct1 = stats1.total.winPct;
             const totalPct2 = stats2.total.winPct;
 
+            const roleColWidth = isMobile ? 'width: 35px !important; max-width: 35px !important; min-width: 35px !important;' : '';
+
             return `
                 <table class="comparison-table">
                     <thead>
                         <tr>
-                            <th rowspan="2" style="text-align: center;">Роля</th>
+                            <th rowspan="2" style="text-align: center; ${roleColWidth}">Роля</th>
                             <th colspan="4" class="player-column-header">${player1Name}</th>
                             <th colspan="4" class="player-column-header">${player2Name}</th>
                         </tr>
@@ -3869,81 +4203,81 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Мірны жыхар</td>
+                            <td style="${roleColWidth}">Мірны жыхар</td>
                             <td class="win-cell">${stats1.byRole.M.wins}</td>
                             <td class="loss-cell">${stats1.byRole.M.losses}</td>
                             <td>${stats1.byRole.M.wins + stats1.byRole.M.losses}</td>
-                            <td class="percentage-cell">${addStar(mPct1, mPct2, mPct1.toFixed(1))}</td>
+                            <td class="percentage-cell">${formatPercent(mPct1, mPct2, mPct1.toFixed(1))}</td>
                             <td class="win-cell">${stats2.byRole.M.wins}</td>
                             <td class="loss-cell">${stats2.byRole.M.losses}</td>
                             <td>${stats2.byRole.M.wins + stats2.byRole.M.losses}</td>
-                            <td class="percentage-cell">${addStar(mPct2, mPct1, mPct2.toFixed(1))}</td>
+                            <td class="percentage-cell">${formatPercent(mPct2, mPct1, mPct2.toFixed(1))}</td>
                         </tr>
                         <tr>
-                            <td>Шэрыф</td>
+                            <td style="${roleColWidth}">Шэрыф</td>
                             <td class="win-cell">${stats1.byRole.Sh.wins}</td>
                             <td class="loss-cell">${stats1.byRole.Sh.losses}</td>
                             <td>${stats1.byRole.Sh.wins + stats1.byRole.Sh.losses}</td>
-                            <td class="percentage-cell">${addStar(shPct1, shPct2, shPct1.toFixed(1))}</td>
+                            <td class="percentage-cell">${formatPercent(shPct1, shPct2, shPct1.toFixed(1))}</td>
                             <td class="win-cell">${stats2.byRole.Sh.wins}</td>
                             <td class="loss-cell">${stats2.byRole.Sh.losses}</td>
                             <td>${stats2.byRole.Sh.wins + stats2.byRole.Sh.losses}</td>
-                            <td class="percentage-cell">${addStar(shPct2, shPct1, shPct2.toFixed(1))}</td>
+                            <td class="percentage-cell">${formatPercent(shPct2, shPct1, shPct2.toFixed(1))}</td>
                         </tr>
                         <tr class="team-row">
-                            <td>Агулам за чырвоных</td>
+                            <td style="${roleColWidth}">Агулам за чырвоных</td>
                             <td class="win-cell">${stats1.red.wins}</td>
                             <td class="loss-cell">${stats1.red.losses}</td>
                             <td>${stats1.red.wins + stats1.red.losses}</td>
-                            <td class="percentage-cell">${addStar(redPct1, redPct2, redPct1.toFixed(1))}</td>
+                            <td class="percentage-cell">${formatPercent(redPct1, redPct2, redPct1.toFixed(1))}</td>
                             <td class="win-cell">${stats2.red.wins}</td>
                             <td class="loss-cell">${stats2.red.losses}</td>
                             <td>${stats2.red.wins + stats2.red.losses}</td>
-                            <td class="percentage-cell">${addStar(redPct2, redPct1, redPct2.toFixed(1))}</td>
+                            <td class="percentage-cell">${formatPercent(redPct2, redPct1, redPct2.toFixed(1))}</td>
                         </tr>
                         <tr>
-                            <td>Мафія</td>
+                            <td style="${roleColWidth}">Мафія</td>
                             <td class="win-cell">${stats1.byRole.Mf.wins}</td>
                             <td class="loss-cell">${stats1.byRole.Mf.losses}</td>
                             <td>${stats1.byRole.Mf.wins + stats1.byRole.Mf.losses}</td>
-                            <td class="percentage-cell">${addStar(mfPct1, mfPct2, mfPct1.toFixed(1))}</td>
+                            <td class="percentage-cell">${formatPercent(mfPct1, mfPct2, mfPct1.toFixed(1))}</td>
                             <td class="win-cell">${stats2.byRole.Mf.wins}</td>
                             <td class="loss-cell">${stats2.byRole.Mf.losses}</td>
                             <td>${stats2.byRole.Mf.wins + stats2.byRole.Mf.losses}</td>
-                            <td class="percentage-cell">${addStar(mfPct2, mfPct1, mfPct2.toFixed(1))}</td>
+                            <td class="percentage-cell">${formatPercent(mfPct2, mfPct1, mfPct2.toFixed(1))}</td>
                         </tr>
                         <tr>
-                            <td>Дон</td>
+                            <td style="${roleColWidth}">Дон</td>
                             <td class="win-cell">${stats1.byRole.D.wins}</td>
                             <td class="loss-cell">${stats1.byRole.D.losses}</td>
                             <td>${stats1.byRole.D.wins + stats1.byRole.D.losses}</td>
-                            <td class="percentage-cell">${addStar(dPct1, dPct2, dPct1.toFixed(1))}</td>
+                            <td class="percentage-cell">${formatPercent(dPct1, dPct2, dPct1.toFixed(1))}</td>
                             <td class="win-cell">${stats2.byRole.D.wins}</td>
                             <td class="loss-cell">${stats2.byRole.D.losses}</td>
                             <td>${stats2.byRole.D.wins + stats2.byRole.D.losses}</td>
-                            <td class="percentage-cell">${addStar(dPct2, dPct1, dPct2.toFixed(1))}</td>
+                            <td class="percentage-cell">${formatPercent(dPct2, dPct1, dPct2.toFixed(1))}</td>
                         </tr>
                         <tr class="team-row">
-                            <td>Агулам за чорных</td>
+                            <td style="${roleColWidth}">Агулам за чорных</td>
                             <td class="win-cell">${stats1.black.wins}</td>
                             <td class="loss-cell">${stats1.black.losses}</td>
                             <td>${stats1.black.wins + stats1.black.losses}</td>
-                            <td class="percentage-cell">${addStar(blackPct1, blackPct2, blackPct1.toFixed(1))}</td>
+                            <td class="percentage-cell">${formatPercent(blackPct1, blackPct2, blackPct1.toFixed(1))}</td>
                             <td class="win-cell">${stats2.black.wins}</td>
                             <td class="loss-cell">${stats2.black.losses}</td>
                             <td>${stats2.black.wins + stats2.black.losses}</td>
-                            <td class="percentage-cell">${addStar(blackPct2, blackPct1, blackPct2.toFixed(1))}</td>
+                            <td class="percentage-cell">${formatPercent(blackPct2, blackPct1, blackPct2.toFixed(1))}</td>
                         </tr>
                         <tr class="total-row">
-                            <td style="font-weight: bold;">Усяго</td>
+                            <td style="font-weight: bold; ${roleColWidth}">Усяго</td>
                             <td class="win-cell" style="font-weight: bold;">${stats1.total.wins}</td>
                             <td class="loss-cell" style="font-weight: bold;">${stats1.total.losses}</td>
                             <td style="font-weight: bold;">${stats1.total.wins + stats1.total.losses}</td>
-                            <td class="percentage-cell" style="font-weight: bold;">${addStar(totalPct1, totalPct2, totalPct1.toFixed(1))}</td>
+                            <td class="percentage-cell" style="font-weight: bold;">${formatPercent(totalPct1, totalPct2, totalPct1.toFixed(1))}</td>
                             <td class="win-cell" style="font-weight: bold;">${stats2.total.wins}</td>
                             <td class="loss-cell" style="font-weight: bold;">${stats2.total.losses}</td>
                             <td style="font-weight: bold;">${stats2.total.wins + stats2.total.losses}</td>
-                            <td class="percentage-cell" style="font-weight: bold;">${addStar(totalPct2, totalPct1, totalPct2.toFixed(1))}</td>
+                            <td class="percentage-cell" style="font-weight: bold;">${formatPercent(totalPct2, totalPct1, totalPct2.toFixed(1))}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -3973,6 +4307,17 @@
                 return `${day}.${month}.${year}`;
             };
 
+            // Check if mobile
+            const isMobile = window.innerWidth <= 768;
+
+            // Short role names for mobile
+            const shortRoleNames = {
+                'M': 'М',
+                'Sh': 'Ш',
+                'Mf': 'МФ',
+                'D': 'Д'
+            };
+
             // Calculate pagination
             const totalPages = Math.ceil(games.length / gamesPerPage);
             const startIdx = (page - 1) * gamesPerPage;
@@ -3981,13 +4326,19 @@
 
             const rows = paginatedGames.map(game => {
                 const gameNumber = game.game_number ? `#${game.game_number}` : `#${game.game_id}`;
+                const roleName = isMobile 
+                    ? (shortRoleNames[game.role_code] || game.role_code)
+                    : (roleNames[game.role_code] || game.role_code);
+                const resultText = isMobile
+                    ? (game.player_won ? '+' : '−')
+                    : (game.player_won ? 'Перамога' : 'Параза');
                 return `
                     <tr>
                         <td>${gameNumber}</td>
                         <td>${formatDate(game.game_date)}</td>
-                        <td>${roleNames[game.role_code] || game.role_code}</td>
+                        <td>${roleName}</td>
                         <td class="${game.player_won ? 'win-badge' : 'loss-badge'}">
-                            ${game.player_won ? 'Перамога' : 'Параза'}
+                            ${resultText}
                         </td>
                     </tr>
                 `;
