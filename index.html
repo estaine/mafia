@@ -403,6 +403,8 @@
 
         .table-wrapper {
             position: relative;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         table {
@@ -1281,7 +1283,50 @@
             border-left: 2px solid #e0e0e0 !important;
         }
 
+        .table-controls {
+            display: none;
+            padding: 12px 20px;
+            background: linear-gradient(to bottom, #f8f9fa 0%, #ecf0f1 100%);
+            border-bottom: 1px solid #d0d0d0;
+            text-align: right;
+        }
+
+        .columns-toggle-btn {
+            background: none;
+            border: none;
+            color: #34495e;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: 'Baskerville', 'Garamond', 'Times New Roman', serif;
+            padding: 8px 12px;
+            transition: all 0.2s;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            text-decoration-color: #bdc3c7;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .columns-toggle-btn:hover {
+            color: #2c3e50;
+            text-decoration-color: #34495e;
+        }
+
+        .columns-toggle-btn:active {
+            transform: scale(0.98);
+        }
+
+        .columns-toggle-btn::before {
+            content: '⚙';
+            font-size: 15px;
+            opacity: 0.7;
+        }
+
         @media (max-width: 768px) {
+            .table-controls {
+                display: block;
+            }
             .header h1 {
                 font-size: 2em;
             }
@@ -1309,6 +1354,18 @@
             th, td {
                 font-size: 12px;
                 padding: 8px 5px;
+            }
+
+            /* Hide columns except: name, red%, black%, total, win% */
+            #dataTable th:not(:nth-child(1)):not(:nth-child(9)):not(:nth-child(17)):not(:nth-child(20)):not(:nth-child(21)),
+            #dataTable td:not(:nth-child(1)):not(:nth-child(9)):not(:nth-child(17)):not(:nth-child(20)):not(:nth-child(21)) {
+                display: none;
+            }
+
+            /* Show all columns when expanded */
+            .table-wrapper.show-all-columns #dataTable th,
+            .table-wrapper.show-all-columns #dataTable td {
+                display: table-cell !important;
             }
 
             .player-search-wrapper {
@@ -1472,6 +1529,12 @@
                 </label>
             </div>
             </div>
+        </div>
+
+        <div class="table-controls" id="tableControls" style="display: none;">
+            <button class="columns-toggle-btn" id="columnsToggleBtn">
+                <span id="columnsToggleText">Паказаць усе калонкі</span>
+            </button>
         </div>
 
         <div class="table-wrapper" id="tableWrapper" style="display: none;">
@@ -2038,6 +2101,7 @@
         function showPlayerStatsView() {
             // Hide table view and filters
             document.getElementById('tableWrapper').style.display = 'none';
+            document.getElementById('tableControls').style.display = 'none';
             document.getElementById('filtersContainer').style.display = 'none';
             
             // Show player stats page
@@ -2060,6 +2124,7 @@
         function showMainTableView() {
             // Show table view and filters
             document.getElementById('tableWrapper').style.display = 'block';
+            document.getElementById('tableControls').style.display = '';
             document.getElementById('filtersContainer').style.display = 'block';
             
             // Hide player stats page
@@ -2740,6 +2805,17 @@
 
         // Back button handler
         document.getElementById('backButton').addEventListener('click', showMainTableView);
+
+        // Columns toggle button handler
+        const columnsToggleBtn = document.getElementById('columnsToggleBtn');
+        const columnsToggleText = document.getElementById('columnsToggleText');
+        const tableWrapper = document.getElementById('tableWrapper');
+
+        columnsToggleBtn?.addEventListener('click', () => {
+            tableWrapper.classList.toggle('show-all-columns');
+            const isExpanded = tableWrapper.classList.contains('show-all-columns');
+            columnsToggleText.textContent = isExpanded ? 'Схаваць дадатковыя калонкі' : 'Паказаць усе калонкі';
+        });
 
         // ESC key to go back (when not in input field)
         document.addEventListener('keydown', (e) => {
@@ -4137,6 +4213,7 @@
                 // Hide status message and show filters and table
                 document.getElementById('status').classList.remove('show');
                 document.getElementById('filtersContainer').style.display = 'block';
+                document.getElementById('tableControls').style.display = '';
                 document.getElementById('tableWrapper').style.display = 'block';
 
                 // Add click handlers to column headers
