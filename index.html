@@ -1233,6 +1233,10 @@
             font-size: 1.05em;
         }
 
+        .total-separator {
+            border-left: 3px solid #d4af37 !important;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2em;
@@ -1435,19 +1439,19 @@
                         <th class="sortable" data-column="mMinus" title="Паразы за мірных">М-</th>
                         <th class="sortable" data-column="shPlus" title="Перамогі за шэрыфа">Ш+</th>
                         <th class="sortable" data-column="shMinus" title="Паразы за шэрыфа">Ш-</th>
-                        <th class="sortable" data-column="mfPlus" title="Перамогі за мафію">Мф+</th>
-                        <th class="sortable" data-column="mfMinus" title="Паразы за мафію">Мф-</th>
-                        <th class="sortable" data-column="dPlus" title="Перамогі за дона">Д+</th>
-                        <th class="sortable" data-column="dMinus" title="Паразы за дона">Д-</th>
                         <th class="sortable" data-column="redWins" title="Перамогі за чырвоных"><span class="color-indicator color-red"></span>+</th>
                         <th class="sortable" data-column="redLosses" title="Паразы за чырвоных"><span class="color-indicator color-red"></span>-</th>
                         <th class="sortable" data-column="red" title="Агулам за чырвоных"><span class="color-indicator color-red"></span></th>
                         <th class="sortable" data-column="redPct" title="Адсотак перамог за чырвоных"><span class="color-indicator color-red"></span> %</th>
+                        <th class="sortable" data-column="mfPlus" title="Перамогі за мафію">Мф+</th>
+                        <th class="sortable" data-column="mfMinus" title="Паразы за мафію">Мф-</th>
+                        <th class="sortable" data-column="dPlus" title="Перамогі за дона">Д+</th>
+                        <th class="sortable" data-column="dMinus" title="Паразы за дона">Д-</th>
                         <th class="sortable" data-column="blackWins" title="Перамогі за чорных"><span class="color-indicator color-black"></span>+</th>
                         <th class="sortable" data-column="blackLosses" title="Паразы за чорных"><span class="color-indicator color-black"></span>-</th>
                         <th class="sortable" data-column="black" title="Агулам за чорных"><span class="color-indicator color-black"></span></th>
                         <th class="sortable" data-column="blackPct" title="Адсотак перамог за чорных"><span class="color-indicator color-black"></span> %</th>
-                        <th class="sortable" data-column="totalWins" title="Усяго перамог">+</th>
+                        <th class="sortable total-separator" data-column="totalWins" title="Усяго перамог">+</th>
                         <th class="sortable" data-column="totalLosses" title="Усяго параз">-</th>
                         <th class="sortable" data-column="total" title="Усяго гульняў">Усяго</th>
                         <th class="sortable" data-column="winPct" title="Адсотак перамог">%</th>
@@ -1844,6 +1848,34 @@
                 tdShMinus.title = 'Паразы за шэрыфа';
                 tr.appendChild(tdShMinus);
 
+                // Red wins
+                const tdRedWins = document.createElement('td');
+                tdRedWins.textContent = player.redWins;
+                tdRedWins.className = 'win-cell';
+                tdRedWins.title = 'Перамогі за чырвоных';
+                tr.appendChild(tdRedWins);
+
+                // Red losses
+                const tdRedLosses = document.createElement('td');
+                tdRedLosses.textContent = player.redLosses;
+                tdRedLosses.className = 'loss-cell';
+                tdRedLosses.title = 'Паразы за чырвоных';
+                tr.appendChild(tdRedLosses);
+
+                // Red team
+                const tdRed = document.createElement('td');
+                tdRed.textContent = player.red;
+                tdRed.title = 'Агулам за чырвоных';
+                tr.appendChild(tdRed);
+
+                // Red percentage
+                const tdRedPct = document.createElement('td');
+                tdRedPct.textContent = player.redPct.toFixed(1) + '%';
+                tdRedPct.className = 'percentage-cell';
+                tdRedPct.style.fontWeight = 'normal';
+                tdRedPct.title = 'Адсотак перамог за чырвоных';
+                tr.appendChild(tdRedPct);
+
                 // Mf+
                 const tdMfPlus = document.createElement('td');
                 tdMfPlus.textContent = player.mfPlus;
@@ -1872,33 +1904,6 @@
                 tdDMinus.title = 'Паразы за дона';
                 tr.appendChild(tdDMinus);
 
-                // Red wins
-                const tdRedWins = document.createElement('td');
-                tdRedWins.textContent = player.redWins;
-                tdRedWins.className = 'win-cell';
-                tdRedWins.title = 'Перамогі за чырвоных';
-                tr.appendChild(tdRedWins);
-
-                // Red losses
-                const tdRedLosses = document.createElement('td');
-                tdRedLosses.textContent = player.redLosses;
-                tdRedLosses.className = 'loss-cell';
-                tdRedLosses.title = 'Паразы за чырвоных';
-                tr.appendChild(tdRedLosses);
-
-                // Red team
-                const tdRed = document.createElement('td');
-                tdRed.textContent = player.red;
-                tdRed.title = 'Агулам за чырвоных';
-                tr.appendChild(tdRed);
-
-                // Red percentage
-                const tdRedPct = document.createElement('td');
-                tdRedPct.textContent = player.redPct.toFixed(1) + '%';
-                tdRedPct.className = 'percentage-cell';
-                tdRedPct.title = 'Адсотак перамог за чырвоных';
-                tr.appendChild(tdRedPct);
-
                 // Black wins
                 const tdBlackWins = document.createElement('td');
                 tdBlackWins.textContent = player.blackWins;
@@ -1923,13 +1928,14 @@
                 const tdBlackPct = document.createElement('td');
                 tdBlackPct.textContent = player.blackPct.toFixed(1) + '%';
                 tdBlackPct.className = 'percentage-cell';
+                tdBlackPct.style.fontWeight = 'normal';
                 tdBlackPct.title = 'Адсотак перамог за чорных';
                 tr.appendChild(tdBlackPct);
 
                 // Total wins
                 const tdTotalWins = document.createElement('td');
                 tdTotalWins.textContent = player.totalWins;
-                tdTotalWins.className = 'win-cell';
+                tdTotalWins.className = 'win-cell total-separator';
                 tdTotalWins.style.fontWeight = 'bold';
                 tdTotalWins.title = 'Усяго перамог';
                 tr.appendChild(tdTotalWins);
