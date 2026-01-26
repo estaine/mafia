@@ -658,7 +658,7 @@ def handle_hide_player_input(chat_id: int, user_id: int, text: str) -> Dict[str,
     if success:
         response_text = (
             f"✅ <b>Гулец схаваны!</b>\n\n"
-            f"Гулец '<b>{player_found['name']}</b>' больш не будзе адлюстроўвацца ў галоўнай табліцы па змаўчанні.\n\n"
+            f"Гулец '<b>{player_found['name']}</b>' больш не будзе адлюстроўвацца ў галоўнай табліцы па змоўчанні.\n\n"
             "Выкарыстайце /start для вяртання ў меню."
         )
     else:

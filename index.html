@@ -1438,8 +1438,16 @@
                         <th class="sortable" data-column="mfMinus" title="Паразы за мафію">Мф-</th>
                         <th class="sortable" data-column="dPlus" title="Перамогі за дона">Д+</th>
                         <th class="sortable" data-column="dMinus" title="Паразы за дона">Д-</th>
+                        <th class="sortable" data-column="redWins" title="Перамогі за чырвоных">Чырвоны+</th>
+                        <th class="sortable" data-column="redLosses" title="Паразы за чырвоных">Чырвоны-</th>
+                        <th class="sortable" data-column="redPct" title="Адсотак перамог за чырвоных">Чырвоны %</th>
                         <th class="sortable" data-column="red" title="Агулам за чырвоных">Чырвоны</th>
+                        <th class="sortable" data-column="blackWins" title="Перамогі за чорных">Чорны+</th>
+                        <th class="sortable" data-column="blackLosses" title="Паразы за чорных">Чорны-</th>
+                        <th class="sortable" data-column="blackPct" title="Адсотак перамог за чорных">Чорны %</th>
                         <th class="sortable" data-column="black" title="Агулам за чорных">Чорны</th>
+                        <th class="sortable" data-column="totalWins" title="Усяго перамог">+</th>
+                        <th class="sortable" data-column="totalLosses" title="Усяго параз">-</th>
                         <th class="sortable" data-column="total" title="Усяго гульняў">Усяго</th>
                         <th class="sortable" data-column="winPct" title="Адсотак перамог">%</th>
                     </tr>
@@ -1572,8 +1580,10 @@
                         mfPlus: 0, mfMinus: 0,
                         dPlus: 0, dMinus: 0,
                         red: 0, black: 0,
+                        redWins: 0, redLosses: 0,
+                        blackWins: 0, blackLosses: 0,
                         total: 0,
-                        totalWins: 0,
+                        totalWins: 0, totalLosses: 0,
                         isHidden: false,  // Default value, will be updated
                         lastPlayedDate: null  // Track last played date for this player
                     };
@@ -1611,13 +1621,27 @@
                 // Update team stats
                 if (isRed) {
                     stats.red++;
+                    if (won) {
+                        stats.redWins++;
+                    } else {
+                        stats.redLosses++;
+                    }
                 } else {
                     stats.black++;
+                    if (won) {
+                        stats.blackWins++;
+                    } else {
+                        stats.blackLosses++;
+                    }
                 }
                 
                 // Update totals
                 stats.total++;
-                if (won) stats.totalWins++;
+                if (won) {
+                    stats.totalWins++;
+                } else {
+                    stats.totalLosses++;
+                }
             });
             
             // Update global last game date
@@ -1627,6 +1651,8 @@
             // Convert to array and calculate win percentages
             return Object.values(playerStatsMap).map(stats => ({
                 ...stats,
+                redPct: stats.red > 0 ? (stats.redWins / stats.red * 100) : 0,
+                blackPct: stats.black > 0 ? (stats.blackWins / stats.black * 100) : 0,
                 winPct: stats.total > 0 ? (stats.totalWins / stats.total * 100) : 0
             }));
         }
@@ -1845,17 +1871,73 @@
                 tdDMinus.title = 'Паразы за дона';
                 tr.appendChild(tdDMinus);
 
+                // Red wins
+                const tdRedWins = document.createElement('td');
+                tdRedWins.textContent = player.redWins;
+                tdRedWins.className = 'win-cell';
+                tdRedWins.title = 'Перамогі за чырвоных';
+                tr.appendChild(tdRedWins);
+
+                // Red losses
+                const tdRedLosses = document.createElement('td');
+                tdRedLosses.textContent = player.redLosses;
+                tdRedLosses.className = 'loss-cell';
+                tdRedLosses.title = 'Паразы за чырвоных';
+                tr.appendChild(tdRedLosses);
+
+                // Red percentage
+                const tdRedPct = document.createElement('td');
+                tdRedPct.textContent = player.redPct.toFixed(1) + '%';
+                tdRedPct.className = 'percentage-cell';
+                tdRedPct.title = 'Адсотак перамог за чырвоных';
+                tr.appendChild(tdRedPct);
+
                 // Red team
                 const tdRed = document.createElement('td');
                 tdRed.textContent = player.red;
                 tdRed.title = 'Агулам за чырвоных';
                 tr.appendChild(tdRed);
 
+                // Black wins
+                const tdBlackWins = document.createElement('td');
+                tdBlackWins.textContent = player.blackWins;
+                tdBlackWins.className = 'win-cell';
+                tdBlackWins.title = 'Перамогі за чорных';
+                tr.appendChild(tdBlackWins);
+
+                // Black losses
+                const tdBlackLosses = document.createElement('td');
+                tdBlackLosses.textContent = player.blackLosses;
+                tdBlackLosses.className = 'loss-cell';
+                tdBlackLosses.title = 'Паразы за чорных';
+                tr.appendChild(tdBlackLosses);
+
+                // Black percentage
+                const tdBlackPct = document.createElement('td');
+                tdBlackPct.textContent = player.blackPct.toFixed(1) + '%';
+                tdBlackPct.className = 'percentage-cell';
+                tdBlackPct.title = 'Адсотак перамог за чорных';
+                tr.appendChild(tdBlackPct);
+
                 // Black team
                 const tdBlack = document.createElement('td');
                 tdBlack.textContent = player.black;
                 tdBlack.title = 'Агулам за чорных';
                 tr.appendChild(tdBlack);
+
+                // Total wins
+                const tdTotalWins = document.createElement('td');
+                tdTotalWins.textContent = player.totalWins;
+                tdTotalWins.className = 'win-cell';
+                tdTotalWins.title = 'Усяго перамог';
+                tr.appendChild(tdTotalWins);
+
+                // Total losses
+                const tdTotalLosses = document.createElement('td');
+                tdTotalLosses.textContent = player.totalLosses;
+                tdTotalLosses.className = 'loss-cell';
+                tdTotalLosses.title = 'Усяго параз';
+                tr.appendChild(tdTotalLosses);
 
                 // Total games
                 const tdTotal = document.createElement('td');
