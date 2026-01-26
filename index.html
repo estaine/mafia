@@ -1384,7 +1384,7 @@
 
             #dataTable th:nth-child(20)::after {
                 content: 'Σ ⇅';
-                font-size: 16px;
+                font-size: 12px;
                 font-weight: bold;
             }
 
@@ -1394,7 +1394,7 @@
 
             #dataTable th:nth-child(20).sorted-asc::after {
                 content: 'Σ ▲';
-                font-size: 16px;
+                font-size: 12px;
                 font-weight: bold;
                 opacity: 1;
                 color: #ecf0f1;
@@ -1402,7 +1402,7 @@
 
             #dataTable th:nth-child(20).sorted-desc::after {
                 content: 'Σ ▼';
-                font-size: 16px;
+                font-size: 12px;
                 font-weight: bold;
                 opacity: 1;
                 color: #ecf0f1;
@@ -1693,7 +1693,7 @@
         let playerData = [];
         let filteredPlayerData = [];
         let allGamesData = [];
-        let currentSort = { column: 'name', ascending: true };
+        let currentSort = { column: 'winPct', ascending: true };
         let selectedPlayers = [];
         let filterMinGames = 0;
         let filterMaxGames = 100;
@@ -1705,7 +1705,7 @@
         let playerFilterItems = [];
         let showHiddenPlayers = false; // Track checkbox state for hidden players
         let activityPeriodDays = 30; // Will be loaded from DB
-        let onlyActivePlayersFilter = false; // Track checkbox state for active players filter
+        let onlyActivePlayersFilter = true; // Track checkbox state for active players filter
         let lastGameDate = null; // Track most recent game date
 
         function showStatus(message, type = 'info') {
@@ -2831,6 +2831,9 @@
         function setupActivePlayersFilter() {
             const checkbox = document.getElementById('onlyActiveCheckbox');
             if (checkbox) {
+                // Initialize filter state from checkbox's default checked state
+                onlyActivePlayersFilter = checkbox.checked;
+                
                 checkbox.addEventListener('change', () => {
                     onlyActivePlayersFilter = checkbox.checked;
                     
@@ -4287,9 +4290,9 @@
                 playerData = await enrichPlayerDataWithHiddenStatus(playerData);
                 filteredPlayerData = [...playerData];
 
-                // Sort by total games descending by default
-                currentSort = { column: 'total', ascending: true };
-                sortData('total');
+                // Sort by win percentage descending by default
+                currentSort = { column: 'winPct', ascending: true };
+                sortData('winPct');
 
                 // Hide status message and show filters and table
                 document.getElementById('status').classList.remove('show');
