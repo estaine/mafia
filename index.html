@@ -1362,10 +1362,91 @@
                 display: none;
             }
 
+            /* Make visible columns more compact */
+            #dataTable th:nth-child(1),
+            #dataTable th:nth-child(9),
+            #dataTable th:nth-child(17),
+            #dataTable th:nth-child(20),
+            #dataTable th:nth-child(21),
+            #dataTable td:nth-child(1),
+            #dataTable td:nth-child(9),
+            #dataTable td:nth-child(17),
+            #dataTable td:nth-child(20),
+            #dataTable td:nth-child(21) {
+                font-size: 11px;
+                padding: 8px 3px;
+            }
+
+            /* Replace "Усяго" with Σ on mobile */
+            #dataTable th:nth-child(20) {
+                font-size: 0;
+            }
+
+            #dataTable th:nth-child(20)::after {
+                content: 'Σ ⇅';
+                font-size: 16px;
+                font-weight: bold;
+            }
+
+            #dataTable th:nth-child(20).sortable::after {
+                opacity: 0.4;
+            }
+
+            #dataTable th:nth-child(20).sorted-asc::after {
+                content: 'Σ ▲';
+                font-size: 16px;
+                font-weight: bold;
+                opacity: 1;
+                color: #ecf0f1;
+            }
+
+            #dataTable th:nth-child(20).sorted-desc::after {
+                content: 'Σ ▼';
+                font-size: 16px;
+                font-weight: bold;
+                opacity: 1;
+                color: #ecf0f1;
+            }
+
+            /* Make player name column a bit wider, compress percentage columns */
+            #dataTable th:nth-child(1),
+            #dataTable td:nth-child(1) {
+                max-width: none;
+                min-width: 80px;
+            }
+
+            #dataTable th:nth-child(9),
+            #dataTable th:nth-child(17),
+            #dataTable th:nth-child(21),
+            #dataTable td:nth-child(9),
+            #dataTable td:nth-child(17),
+            #dataTable td:nth-child(21) {
+                white-space: nowrap;
+            }
+
             /* Show all columns when expanded */
             .table-wrapper.show-all-columns #dataTable th,
             .table-wrapper.show-all-columns #dataTable td {
                 display: table-cell !important;
+            }
+
+            /* Make table fit content width on mobile */
+            #dataTable {
+                width: 100%;
+                table-layout: auto;
+            }
+
+            /* Restore normal styles when expanded */
+            .table-wrapper.show-all-columns #dataTable th:nth-child(20) {
+                font-size: 12px;
+            }
+
+            .table-wrapper.show-all-columns #dataTable th:nth-child(20)::after {
+                content: none;
+            }
+
+            .table-wrapper.show-all-columns #dataTable {
+                table-layout: auto;
             }
 
             .player-search-wrapper {
