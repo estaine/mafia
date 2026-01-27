@@ -1,14 +1,19 @@
 {
-  "functions": {
-    "api/telegram_webhook.py": {
-      "maxDuration": 60,
-      "memory": 512
-    }
-  },
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/api/telegram_webhook",
-      "destination": "/api/telegram_webhook.py"
+      "src": "api/telegram_webhook.py",
+      "use": "@vercel/python"
     }
-  ]
+  ],
+  "routes": [
+    {
+      "src": "/api/telegram",
+      "dest": "api/telegram_webhook.py"
+    }
+  ],
+  "env": {
+    "ALLOWED_USER_IDS": "5980607330,184403698"
+  }
 }
+
