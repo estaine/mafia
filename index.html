@@ -1635,13 +1635,45 @@
             }
 
             .games-table th:nth-child(1) {
-                font-size: 0;
+                font-size: 0 !important;
             }
 
             .games-table th:nth-child(1)::after {
                 content: '#';
-                font-size: 13px;
+                font-size: 11px;
                 font-weight: bold;
+            }
+
+            /* Mobile: make all headers in games-table smaller, centered, and allow wrapping */
+            .games-table th {
+                font-size: 10px !important;
+                text-align: center !important;
+                white-space: normal !important;
+            }
+
+            /* Mobile: center all cells in games-table */
+            .games-table td {
+                text-align: center !important;
+            }
+
+            /* Mobile: change "Перамога" column header to "+" in comparison mode */
+            .games-table th:nth-child(5) {
+                font-size: 0 !important;
+            }
+
+            .games-table th:nth-child(5)::after {
+                content: '+';
+                font-size: 11px;
+                font-weight: bold;
+            }
+
+            /* Mobile: make last column (victory) narrower */
+            .games-table th:nth-child(5),
+            .games-table td:nth-child(5) {
+                width: 32px !important;
+                max-width: 32px !important;
+                min-width: 32px !important;
+                padding: 5px 2px !important;
             }
 
             /* Mobile optimizations for partner table - stable column widths */
@@ -4543,6 +4575,17 @@
                 return `${day}.${month}.${year}`;
             };
 
+            // Check if mobile
+            const isMobile = window.innerWidth <= 768;
+
+            // Short role names for mobile
+            const shortRoleNames = {
+                'M': 'М',
+                'Sh': 'Ш',
+                'Mf': 'МФ',
+                'D': 'Д'
+            };
+
             // Calculate pagination
             const totalPages = Math.ceil(commonGames.length / comparisonGamesPerPage);
             const startIdx = (page - 1) * comparisonGamesPerPage;
@@ -4551,19 +4594,46 @@
 
             const rows = paginatedGames.map(({ player1, player2 }) => {
                 const gameNumber = player1.game_number ? `#${player1.game_number}` : `#${player1.game_id}`;
-                const p1Role = roleNames[player1.role_code] || player1.role_code;
-                const p2Role = roleNames[player2.role_code] || player2.role_code;
+                
+                // Mobile: use short role names; Desktop: use full role names
+                const p1Role = isMobile
+                    ? (shortRoleNames[player1.role_code] || player1.role_code)
+                    : (roleNames[player1.role_code] || player1.role_code);
+                const p2Role = isMobile
+                    ? (shortRoleNames[player2.role_code] || player2.role_code)
+                    : (roleNames[player2.role_code] || player2.role_code);
+                
                 const redWon = !player1.mafia_won;
-                const victoryText = redWon ? 'Мір' : 'Мафія';
-                const victoryColor = redWon ? '#27ae60' : '#c0392b';
+                
+                // Mobile: show colored squares; Desktop: show text
+                // Red for peaceful team, black for mafia
+                const victoryText = isMobile 
+                    ? (redWon ? '🟥' : '⬛')
+                    : (redWon ? 'Мір' : 'Мафія');
+                const victoryColor = redWon ? '#c0392b' : '#000000';
                 
                 // Check if each player won
                 const p1Won = player1.player_won;
                 const p2Won = player2.player_won;
                 
-                // Apply bold to winning roles
-                const p1RoleFormatted = p1Won ? `<strong>${p1Role}</strong>` : p1Role;
-                const p2RoleFormatted = p2Won ? `<strong>${p2Role}</strong>` : p2Role;
+                // Function to get role color on mobile: М and Ш = red, МФ and Д = black
+                const getRoleColor = (roleCode) => {
+                    if (!isMobile) return '';
+                    if (roleCode === 'M' || roleCode === 'Sh') return '#c0392b'; // Red for city
+                    if (roleCode === 'Mf' || roleCode === 'D') return '#000000'; // Black for mafia
+                    return '';
+                };
+                
+                const p1Color = getRoleColor(player1.role_code);
+                const p2Color = getRoleColor(player2.role_code);
+                
+                // Apply bold to winning roles and color on mobile
+                const p1RoleFormatted = p1Won 
+                    ? `<strong style="${p1Color ? `color: ${p1Color};` : ''}">${p1Role}</strong>` 
+                    : (p1Color ? `<span style="color: ${p1Color};">${p1Role}</span>` : p1Role);
+                const p2RoleFormatted = p2Won 
+                    ? `<strong style="${p2Color ? `color: ${p2Color};` : ''}">${p2Role}</strong>` 
+                    : (p2Color ? `<span style="color: ${p2Color};">${p2Role}</span>` : p2Role);
                 
                 return `
                     <tr>
@@ -4571,7 +4641,7 @@
                         <td>${formatDate(player1.game_date)}</td>
                         <td>${p1RoleFormatted}</td>
                         <td>${p2RoleFormatted}</td>
-                        <td style="color: ${victoryColor}; font-weight: 600;">${victoryText}</td>
+                        <td style="color: ${victoryColor}; font-weight: 600; font-size: ${isMobile ? '16px' : 'inherit'};">${victoryText}</td>
                     </tr>
                 `;
             }).join('');
