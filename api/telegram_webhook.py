@@ -512,8 +512,11 @@ def handle_callback_query(callback_query: Dict) -> Dict[str, Any]:
         
         try:
             # Import from local api directory
-            from .rating_engine import full_recompute
-            from .sync_engine import SupabaseAPI
+            import rating_engine
+            import sync_engine
+            
+            from rating_engine import full_recompute
+            from sync_engine import SupabaseAPI
             
             # Create API instance
             api = SupabaseAPI(SUPABASE_URL, SUPABASE_KEY)
