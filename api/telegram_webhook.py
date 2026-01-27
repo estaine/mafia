@@ -511,16 +511,7 @@ def handle_callback_query(callback_query: Dict) -> Dict[str, Any]:
         edit_telegram_message(chat_id, message_id, "⏳ <b>Пералік рэйтынгу...</b>\n\nКалі ласка, пачакайце.")
         
         try:
-            # Import rating engine from parent directory
-            import sys
-            import os
-            
-            # Add parent directory to path for imports
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            parent_dir = os.path.dirname(current_dir)
-            if parent_dir not in sys.path:
-                sys.path.insert(0, parent_dir)
-            
+            # Import from local api directory
             from rating_engine import full_recompute
             from sync_engine import SupabaseAPI
             
