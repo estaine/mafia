@@ -6,7 +6,7 @@ This script now uses the sync_engine module for the actual sync logic.
 """
 
 import sys
-from sync_engine import sync_games
+from api.sync_engine import sync_games
 
 
 def import_all_games():
