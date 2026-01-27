@@ -1558,6 +1558,27 @@
                 font-weight: bold;
             }
 
+            .stats-table th:nth-child(2).sortable::after {
+                content: '+ ⇅';
+                opacity: 0.4;
+            }
+
+            .stats-table th:nth-child(2).sorted-asc::after {
+                content: '+ ▲';
+                font-size: 13px;
+                font-weight: bold;
+                opacity: 1;
+                color: #ecf0f1;
+            }
+
+            .stats-table th:nth-child(2).sorted-desc::after {
+                content: '+ ▼';
+                font-size: 13px;
+                font-weight: bold;
+                opacity: 1;
+                color: #ecf0f1;
+            }
+
             .stats-table th:nth-child(3) {
                 font-size: 0;
             }
@@ -1568,6 +1589,27 @@
                 font-weight: bold;
             }
 
+            .stats-table th:nth-child(3).sortable::after {
+                content: '− ⇅';
+                opacity: 0.4;
+            }
+
+            .stats-table th:nth-child(3).sorted-asc::after {
+                content: '− ▲';
+                font-size: 13px;
+                font-weight: bold;
+                opacity: 1;
+                color: #ecf0f1;
+            }
+
+            .stats-table th:nth-child(3).sorted-desc::after {
+                content: '− ▼';
+                font-size: 13px;
+                font-weight: bold;
+                opacity: 1;
+                color: #ecf0f1;
+            }
+
             .stats-table th:nth-child(4) {
                 font-size: 0;
             }
@@ -1576,6 +1618,27 @@
                 content: 'Σ';
                 font-size: 13px;
                 font-weight: bold;
+            }
+
+            .stats-table th:nth-child(4).sortable::after {
+                content: 'Σ ⇅';
+                opacity: 0.4;
+            }
+
+            .stats-table th:nth-child(4).sorted-asc::after {
+                content: 'Σ ▲';
+                font-size: 13px;
+                font-weight: bold;
+                opacity: 1;
+                color: #ecf0f1;
+            }
+
+            .stats-table th:nth-child(4).sorted-desc::after {
+                content: 'Σ ▼';
+                font-size: 13px;
+                font-weight: bold;
+                opacity: 1;
+                color: #ecf0f1;
             }
 
             /* Mobile optimizations for partner/opponent table - shorten column headers */
@@ -2430,7 +2493,7 @@
         // Partner/Opponent table state
         let partnerTableData = [];
         let partnerTableSort = { column: 'totalTotal', ascending: false };
-        let partnerSectionMode = 'total'; // 'together', 'against', 'total'
+        let partnerSectionMode = 'together'; // 'together', 'against', 'total'
 
         // Navigation Control Functions
         function showPlayerStatsView() {
@@ -3957,11 +4020,11 @@
                     <table class="stats-table" id="partnerOpponentTable">
                         <thead>
                             <tr>
-                                <th style="text-align: center;">Гулец</th>
-                                <th>Перамогі</th>
-                                <th>Паразы</th>
-                                <th>Гульні</th>
-                                <th>%</th>
+                                <th class="sortable" data-column="name" style="text-align: center;" title="Гулец">Гулец</th>
+                                <th class="sortable" data-column="${columnPrefix}Wins" title="Перамогі">Перамогі</th>
+                                <th class="sortable" data-column="${columnPrefix}Losses" title="Паразы">Паразы</th>
+                                <th class="sortable" data-column="${columnPrefix}Total" title="Гульні">Гульні</th>
+                                <th class="sortable" data-column="${columnPrefix}Pct" title="Працэнт перамог">%</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -4061,13 +4124,74 @@
                 newIndex = (currentIndex - 1 + sections.length) % sections.length;
             }
             
+            const oldSection = partnerSectionMode;
             partnerSectionMode = sections[newIndex];
+            
+            // Retain the current sort type but map it to the new section
+            // Extract the sort type (Wins, Losses, Total, Pct) from current column
+            let sortType = '';
+            const currentAscending = partnerTableSort.ascending;
+            
+            if (partnerTableSort.column === 'name') {
+                sortType = 'name';
+            } else {
+                // Extract suffix like "Wins", "Losses", "Total", "Pct"
+                const match = partnerTableSort.column.match(/^(together|against|total)(.+)$/);
+                if (match) {
+                    sortType = match[2]; // "Wins", "Losses", "Total", or "Pct"
+                }
+            }
+            
+            // Map to new section's column
+            if (sortType === 'name') {
+                partnerTableSort.column = 'name';
+            } else {
+                partnerTableSort.column = partnerSectionMode + sortType;
+            }
+            
+            // Keep the same ascending/descending order
+            partnerTableSort.ascending = currentAscending;
+            currentPartnerPage = 1; // Reset to first page
+            
+            // Sort the data directly without calling sortPartnerTable (to avoid toggling)
+            const column = partnerTableSort.column;
+            partnerTableData.sort((a, b) => {
+                let aVal, bVal;
+                
+                if (column === 'name') {
+                    aVal = a.name.toLowerCase();
+                    bVal = b.name.toLowerCase();
+                    if (aVal === bVal) return 0;
+                    const comparison = aVal > bVal ? 1 : -1;
+                    return partnerTableSort.ascending ? comparison : -comparison;
+                } else if (column.endsWith('Pct')) {
+                    const section = column.replace('Pct', '');
+                    const aTotal = a[section].wins + a[section].losses;
+                    const bTotal = b[section].wins + b[section].losses;
+                    aVal = aTotal > 0 ? (a[section].wins / aTotal) : 0;
+                    bVal = bTotal > 0 ? (b[section].wins / bTotal) : 0;
+                } else {
+                    const parts = column.match(/^(together|against|total)(.+)$/);
+                    if (parts) {
+                        const section = parts[1];
+                        const stat = parts[2].toLowerCase();
+                        aVal = a[section][stat];
+                        bVal = b[section][stat];
+                    }
+                }
+                
+                if (aVal === bVal) return 0;
+                const comparison = aVal > bVal ? 1 : -1;
+                return partnerTableSort.ascending ? comparison : -comparison;
+            });
             
             // Re-render the partner table
             const partnerSection = document.querySelector('.stats-section:has(#partnerOpponentTable)');
             if (partnerSection) {
                 const newTableHTML = renderPartnerOpponentTable(partnerTableData, currentPartnerPage);
                 partnerSection.innerHTML = `<h3>Партнёры і супернікі</h3>${newTableHTML}`;
+                setupPartnerTableSorting();
+                updatePartnerTableSortIndicators();
             }
         }
 
@@ -4086,7 +4210,14 @@
                 let aVal, bVal;
                 
                 // Handle different column types
-                if (column === 'together' || column === 'against' || column === 'total') {
+                if (column === 'name') {
+                    // Sort by player name (alphabetical)
+                    aVal = a.name.toLowerCase();
+                    bVal = b.name.toLowerCase();
+                    if (aVal === bVal) return 0;
+                    const comparison = aVal > bVal ? 1 : -1;
+                    return partnerTableSort.ascending ? comparison : -comparison;
+                } else if (column === 'together' || column === 'against' || column === 'total') {
                     // Sort by total for section headers
                     aVal = a[column].total;
                     bVal = b[column].total;
@@ -4496,8 +4627,25 @@
 
                 // Store partner data globally for sorting
                 partnerTableData = partnerStats;
-                partnerTableSort = { column: 'totalTotal', ascending: false };
+                // In mobile mode, default to 'together' section, so sort by togetherTotal
+                const isMobile = window.innerWidth <= 768;
+                partnerTableSort = { column: isMobile ? 'togetherTotal' : 'totalTotal', ascending: false };
                 currentPartnerPage = 1;
+
+                // Sort partner data by default column (total games descending)
+                partnerTableData.sort((a, b) => {
+                    const column = partnerTableSort.column;
+                    let aVal, bVal;
+                    
+                    if (column.endsWith('Total')) {
+                        const section = column.replace('Total', '');
+                        aVal = a[section].total;
+                        bVal = b[section].total;
+                    }
+                    
+                    if (aVal === bVal) return 0;
+                    return bVal - aVal; // Descending order
+                });
 
                 // Render player stats content
                 playerStatsBody.innerHTML = `
@@ -4507,7 +4655,7 @@
                     </div>
                     <div class="stats-section">
                         <h3>Партнёры і супернікі</h3>
-                        ${renderPartnerOpponentTable(partnerStats, 1)}
+                        ${renderPartnerOpponentTable(partnerTableData, 1)}
                     </div>
                     <div class="stats-section">
                         <h3>Гісторыя гульняў</h3>
