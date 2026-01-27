@@ -37,16 +37,40 @@ class SupabaseAPI:
             'Content-Type': 'application/json',
             'Prefer': 'return=representation'
         }
+        # Base headers for GET requests (Range will be added per request)
+        self.get_headers = {
+            'apikey': key,
+            'Authorization': f'Bearer {key}',
+            'Content-Type': 'application/json'
+        }
     
     def get(self, table: str, **params):
-        """GET request to Supabase table."""
+        """GET request to Supabase table with automatic pagination."""
         url = f'{self.url}/rest/v1/{table}'
-        # Add Range header to get all rows (Supabase default limit is too small)
-        # Setting to 0-99999 to handle large datasets
-        headers = {**self.headers, 'Range': '0-99999'}
-        response = requests.get(url, headers=headers, params=params)
-        response.raise_for_status()
-        return response.json()
+        
+        all_results = []
+        offset = 0
+        page_size = 1000
+        
+        while True:
+            # Fetch one page
+            headers = {**self.get_headers, 'Range': f'{offset}-{offset + page_size - 1}'}
+            response = requests.get(url, headers=headers, params=params)
+            response.raise_for_status()
+            
+            page_data = response.json()
+            if not page_data:
+                break
+                
+            all_results.extend(page_data)
+            
+            # Check if we got a full page (meaning there might be more)
+            if len(page_data) < page_size:
+                break
+                
+            offset += page_size
+        
+        return all_results
     
     def post(self, table: str, data):
         """POST request to Supabase table."""
