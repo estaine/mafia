@@ -1276,18 +1276,19 @@
         .rating-cell {
             color: #2c3e50;
             font-weight: 600;
-            font-size: 1.05em;
+            font-size: 0.95em;
+            white-space: nowrap;
         }
 
         .rating-value {
             color: #d4af37;
             font-weight: 700;
-            font-size: 1.1em;
+            font-size: 1em;
         }
 
         .rd-indicator {
             color: #7f8c8d;
-            font-size: 0.85em;
+            font-size: 0.75em;
             font-weight: normal;
             margin-left: 2px;
         }
@@ -1952,7 +1953,6 @@
                 <thead>
                     <tr>
                         <th class="sortable" data-column="name" title="Гулец">Гулец</th>
-                        <th class="sortable" data-column="rating" title="Рэйтынг Glicko-2">Рэйтынг</th>
                         <th class="sortable" data-column="mPlus" title="Перамогі за мірных">М+</th>
                         <th class="sortable" data-column="mMinus" title="Паразы за мірных">М-</th>
                         <th class="sortable" data-column="shPlus" title="Перамогі за шэрыфа">Ш+</th>
@@ -1973,6 +1973,7 @@
                         <th class="sortable" data-column="totalLosses" title="Усяго параз">-</th>
                         <th class="sortable" data-column="total" title="Усяго гульняў">Усяго</th>
                         <th class="sortable" data-column="winPct" title="Адсотак перамог">%</th>
+                        <th class="sortable" data-column="rating" title="Рэйтынг Glicko-2">Рэйтынг</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -2340,13 +2341,6 @@
                 tdName.textContent = player.name;
                 tr.appendChild(tdName);
 
-                // Rating
-                const tdRating = document.createElement('td');
-                tdRating.className = 'rating-cell';
-                tdRating.title = `Рэйтынг Glicko-2 (адхіленне: ±${player.ratingDeviation})`;
-                tdRating.innerHTML = `<span class="rating-value">${player.rating}</span> <span class="rd-indicator">±${player.ratingDeviation}</span>`;
-                tr.appendChild(tdRating);
-
                 // M+
                 const tdMPlus = document.createElement('td');
                 tdMPlus.textContent = player.mPlus;
@@ -2489,6 +2483,13 @@
                 tdPct.className = 'percentage-cell';
                 tdPct.title = 'Адсотак перамог';
                 tr.appendChild(tdPct);
+
+                // Rating (last column)
+                const tdRating = document.createElement('td');
+                tdRating.className = 'rating-cell';
+                tdRating.title = `Рэйтынг Glicko-2 (адхіленне: ±${player.ratingDeviation})`;
+                tdRating.innerHTML = `<span class="rating-value">${player.rating}</span> <span class="rd-indicator">±${player.ratingDeviation}</span>`;
+                tr.appendChild(tdRating);
 
                 tableBody.appendChild(tr);
             });
