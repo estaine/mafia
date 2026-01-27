@@ -1852,13 +1852,6 @@
 
             <div class="filter-row">
                 <label class="checkbox-container">
-                    <input type="checkbox" id="showHiddenCheckbox" />
-                    <span class="checkbox-label-text">Паказваць схаваных</span>
-                </label>
-            </div>
-
-            <div class="filter-row">
-                <label class="checkbox-container">
                     <input type="checkbox" id="onlyActiveCheckbox" checked />
                     <span class="checkbox-label-text">Толькі актыўныя</span>
                 </label>
@@ -2192,8 +2185,8 @@
                     return false;
                 }
                 
-                // Filter by hidden status (only when checkbox is unchecked)
-                if (!showHiddenPlayers && player.isHidden) {
+                // Filter by hidden status (always hide hidden players)
+                if (player.isHidden) {
                     return false;
                 }
                 
@@ -2417,6 +2410,12 @@
             'D': 'Дон'
         };
 
+        // Helper function to anonymize hidden player names
+        function getDisplayName(playerName) {
+            const player = playerData.find(p => p.name === playerName);
+            return (player && player.isHidden) ? '[Ананім]' : playerName;
+        }
+
         // Autocomplete state
         let autocompleteSelectedIndex = -1;
         let autocompleteItems = [];
@@ -2511,6 +2510,8 @@
         // Filter players by search term
         function filterPlayers(searchTerm, excludePlayer = null) {
             let filtered = playerData;
+            // Always exclude hidden players from autocomplete
+            filtered = filtered.filter(player => !player.isHidden);
             if (excludePlayer) {
                 filtered = filtered.filter(player => player.name !== excludePlayer);
             }
@@ -3079,18 +3080,6 @@
                 
                 tempInput.showPicker ? tempInput.showPicker() : tempInput.click();
             });
-        }
-
-        // Setup hidden players checkbox
-        function setupHiddenPlayersFilter() {
-            const checkbox = document.getElementById('showHiddenCheckbox');
-            if (checkbox) {
-                checkbox.addEventListener('change', () => {
-                    showHiddenPlayers = checkbox.checked;
-                    console.log('Show hidden players:', showHiddenPlayers);
-                    applyFilters();
-                });
-            }
         }
 
         function setupActivePlayersFilter() {
@@ -3894,6 +3883,12 @@
                 return total > 0 ? (wins / total * 100).toFixed(1) : '0.0';
             };
 
+            // Filter out hidden players from partner stats
+            partnerStats = partnerStats.filter(partner => {
+                const playerObj = playerData.find(p => p.name === partner.name);
+                return !playerObj || !playerObj.isHidden;
+            });
+
             if (!partnerStats || partnerStats.length === 0) {
                 return '<p>Няма дадзеных для адлюстравання</p>';
             }
@@ -4233,8 +4228,8 @@
                     <thead>
                         <tr>
                             <th rowspan="2" style="text-align: center; ${roleColWidth}">Роля</th>
-                            <th colspan="4" class="player-column-header">${player1Name}</th>
-                            <th colspan="4" class="player-column-header">${player2Name}</th>
+                            <th colspan="4" class="player-column-header">${getDisplayName(player1Name)}</th>
+                            <th colspan="4" class="player-column-header">${getDisplayName(player2Name)}</th>
                         </tr>
                         <tr>
                             <th style="text-align: center;">Перамогі</th>
@@ -4466,7 +4461,7 @@
             closeAutocomplete();
             
             // Update header title with player name
-            document.getElementById('headerTitle').textContent = playerName;
+            document.getElementById('headerTitle').textContent = getDisplayName(playerName);
             
             // Show player stats page with loading state
             const playerStatsBody = document.getElementById('playerStatsBody');
@@ -4679,7 +4674,7 @@
         // Show comparison stats for two players
         async function showComparisonStats(player1Name, player2Name) {
             // Update header title with both player names
-            document.getElementById('headerTitle').textContent = `${player1Name} vs ${player2Name}`;
+            document.getElementById('headerTitle').textContent = `${getDisplayName(player1Name)} vs ${getDisplayName(player2Name)}`;
             
             const playerStatsBody = document.getElementById('playerStatsBody');
             playerStatsBody.innerHTML = `
@@ -4699,7 +4694,7 @@
                 if (!games1 || games1.length === 0) {
                     playerStatsBody.innerHTML = `
                         <div class="player-stats-loading">
-                            <p>Няма дадзеных для гульца ${player1Name}</p>
+                            <p>Няма дадзеных для гульца ${getDisplayName(player1Name)}</p>
                         </div>
                     `;
                     return;
@@ -4708,7 +4703,7 @@
                 if (!games2 || games2.length === 0) {
                     playerStatsBody.innerHTML = `
                         <div class="player-stats-loading">
-                            <p>Няма дадзеных для гульца ${player2Name}</p>
+                            <p>Няма дадзеных для гульца ${getDisplayName(player2Name)}</p>
                         </div>
                     `;
                     return;
@@ -4887,7 +4882,6 @@
                 setupPlayerFilter();
                 setupGamesFilter();
                 setupDateFilter();
-                setupHiddenPlayersFilter();
                 setupActivePlayersFilter();
 
             } catch (error) {
