@@ -844,7 +844,7 @@ def handle_callback_query(callback_query: Dict) -> Dict[str, Any]:
                     chat_id, 
                     message_id,
                     "✅ <b>Рэйтынг пералічаны!</b>\n\n"
-                    "Усе рэйтынгі Glicko-2 абноўлены.\n\n"
+                    "Усе рэйтынгі Glicko-2 адноўленыя.\n\n"
                     "Выкарыстайце /start для вяртання ў меню."
                 )
             else:
