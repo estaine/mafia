@@ -35,7 +35,9 @@ jobs:
           
           python3 << EOF
           import json
-          from sync_engine import sync_games
+          import sys
+          sys.path.insert(0, 'api')
+          from telegram_webhook import sync_games
           
           mode = "$MODE"
           result = sync_games(mode=mode)

@@ -1911,7 +1911,7 @@
                         <th class="sortable" data-column="totalLosses" title="Усяго параз">-</th>
                         <th class="sortable" data-column="total" title="Усяго гульняў">Усяго</th>
                         <th class="sortable" data-column="winPct" title="Адсотак перамог">%</th>
-                        <th class="sortable" data-column="rating" title="Рэйтынг Glicko-2">R</th>
+                        <th class="sortable" data-column="rating" title="Рэйтынг">Рэйтынг</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -2502,7 +2502,7 @@
                 // Rating (last column)
                 const tdRating = document.createElement('td');
                 tdRating.className = 'rating-cell';
-                tdRating.title = `Рэйтынг Glicko-2: ${player.rating} (адхіленне: ±${player.ratingDeviation})`;
+                tdRating.title = `Рэйтынг: ${player.rating} (адхіленне: ±${player.ratingDeviation})`;
                 tdRating.innerHTML = `<span class="rating-value">${player.rating}</span>`;
                 tr.appendChild(tdRating);
 
