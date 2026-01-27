@@ -41,7 +41,10 @@ class SupabaseAPI:
     def get(self, table: str, **params):
         """GET request to Supabase table."""
         url = f'{self.url}/rest/v1/{table}'
-        response = requests.get(url, headers=self.headers, params=params)
+        # Add Range header to get all rows (Supabase default limit is too small)
+        # Setting to 0-99999 to handle large datasets
+        headers = {**self.headers, 'Range': '0-99999'}
+        response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
         return response.json()
     
