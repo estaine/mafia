@@ -449,6 +449,10 @@
             width: 65px;
         }
 
+        #dataTable th[data-column="rating"] {
+            width: 65px;
+        }
+
         #dataTable th[data-column="total"] {
             width: 80px;
         }
@@ -2150,6 +2154,70 @@
                 }));
             } catch (error) {
                 console.error('Error enriching player data:', error);
+                return playerData;
+            }
+        }
+
+        // Fetch player ratings and merge into player data
+        async function enrichPlayerDataWithRating(playerData) {
+            try {
+                const apiUrl = `${SUPABASE_URL}/rest/v1/player_current_rating?select=player_id,current_rating,current_rd`;
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    console.error('Failed to fetch player ratings');
+                    return playerData;
+                }
+                
+                const ratings = await response.json();
+                
+                // Need to fetch player names to map ID to name
+                const playerNamesUrl = `${SUPABASE_URL}/rest/v1/player?select=id,name`;
+                const playerNamesResponse = await fetch(playerNamesUrl, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                if (!playerNamesResponse.ok) {
+                    console.error('Failed to fetch player names');
+                    return playerData;
+                }
+                
+                const playerNames = await playerNamesResponse.json();
+                const idToNameMap = {};
+                playerNames.forEach(p => {
+                    idToNameMap[p.id] = p.name;
+                });
+                
+                // Create rating map by player name
+                const ratingMap = {};
+                ratings.forEach(r => {
+                    const playerName = idToNameMap[r.player_id];
+                    if (playerName) {
+                        ratingMap[playerName] = {
+                            rating: Math.round(parseFloat(r.current_rating) || 1500),
+                            ratingDeviation: Math.round(parseFloat(r.current_rd) || 350)
+                        };
+                    }
+                });
+                
+                // Merge rating data into player data
+                return playerData.map(player => ({
+                    ...player,
+                    rating: ratingMap[player.name]?.rating || 1500,
+                    ratingDeviation: ratingMap[player.name]?.ratingDeviation || 350
+                }));
+            } catch (error) {
+                console.error('Error enriching player data with rating:', error);
                 return playerData;
             }
         }
@@ -4896,6 +4964,9 @@
                 
                 // Enrich with hidden status from player table
                 playerData = await enrichPlayerDataWithHiddenStatus(playerData);
+                
+                // Enrich with rating data
+                playerData = await enrichPlayerDataWithRating(playerData);
                 filteredPlayerData = [...playerData];
 
                 // Sort by win percentage descending by default
