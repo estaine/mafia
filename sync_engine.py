@@ -504,6 +504,29 @@ def sync_games(mode: str = 'sync') -> Dict[str, any]:
         db_stats_after = get_db_stats(api)
         players_after = len(api.get('player', select='id'))
         
+        # Compute ratings after syncing games
+        rating_success = False
+        if games_synced > 0:
+            try:
+                from rating_engine import incremental_compute, full_recompute
+                
+                if mode == 'overwrite':
+                    # Full recomputation from scratch
+                    print("Computing ratings from scratch...")
+                    rating_success = full_recompute(api)
+                else:
+                    # Incremental computation for new games only
+                    print(f"Computing ratings for {len(new_game_ids)} new games...")
+                    rating_success = incremental_compute(api, new_game_ids)
+                
+                if rating_success:
+                    print("Rating computation successful!")
+                else:
+                    print("Warning: Rating computation failed, but game sync was successful.")
+            except Exception as e:
+                print(f"Warning: Rating computation error: {e}")
+                # Don't fail the whole sync if rating computation fails
+        
         return {
             'success': True,
             'mode': mode,
@@ -515,7 +538,8 @@ def sync_games(mode: str = 'sync') -> Dict[str, any]:
             'games_synced': games_synced,
             'games_skipped': games_skipped,
             'players_created': players_after - players_before,
-            'players_total': players_after
+            'players_total': players_after,
+            'ratings_computed': rating_success
         }
         
     except Exception as e:
