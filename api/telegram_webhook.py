@@ -267,7 +267,7 @@ def handle_start_command(chat_id: int, user_id: int) -> Dict[str, Any]:
     # Get current activity period value
     current_activity_period = get_supabase_setting('activity_period_days', '30')
     
-    # Create inline keyboard with five buttons
+    # Create inline keyboard with six buttons
     keyboard = {
         "inline_keyboard": [
             [
@@ -275,6 +275,9 @@ def handle_start_command(chat_id: int, user_id: int) -> Dict[str, Any]:
             ],
             [
                 {"text": "⚠️ Перазапісаць", "callback_data": "overwrite"}
+            ],
+            [
+                {"text": "🏆 Пералічыць рэйтынг", "callback_data": "recompute_rating"}
             ],
             [
                 {"text": f"⚙️ Змяніць заліковы мінімум ({current_threshold})", "callback_data": "change_threshold"}
@@ -293,6 +296,7 @@ def handle_start_command(chat_id: int, user_id: int) -> Dict[str, Any]:
         "Выберыце дзеянне:\n\n"
         "<b>Сінхранізаваць</b> - дадаць новыя гульні з табліцы\n"
         "<b>Перазапісаць</b> - выдаліць усё і загрузіць зноў\n"
+        "<b>Пералічыць рэйтынг</b> - пералічыць Glicko-2 рэйтынгі\n"
         f"<b>Заліковы мінімум</b> - зараз: {current_threshold} гульняў\n"
         f"<b>Перыяд актыўнасці</b> - зараз: {current_activity_period} дзён\n"
         "<b>Схаваныя гульцы</b> - кіраванне схаванымі гульцамі"
@@ -500,6 +504,55 @@ def handle_callback_query(callback_query: Dict) -> Dict[str, Any]:
     elif data == "back_to_main":
         # Go back to main menu
         handle_start_command(chat_id, user_id)
+        return {"statusCode": 200}
+    
+    elif data == "recompute_rating":
+        # Recompute all ratings from scratch
+        edit_telegram_message(chat_id, message_id, "⏳ <b>Пералік рэйтынгу...</b>\n\nКалі ласка, пачакайце.")
+        
+        try:
+            # Import rating engine
+            import sys
+            import os
+            
+            # Add parent directory to path to import rating_engine
+            sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+            
+            from rating_engine import full_recompute
+            
+            # Create API instance
+            from sync_engine import SupabaseAPI
+            api = SupabaseAPI(SUPABASE_URL, SUPABASE_KEY)
+            
+            # Run full recomputation
+            success = full_recompute(api)
+            
+            if success:
+                edit_telegram_message(
+                    chat_id, 
+                    message_id,
+                    "✅ <b>Рэйтынг пералічаны!</b>\n\n"
+                    "Усе рэйтынгі Glicko-2 абноўлены.\n\n"
+                    "Выкарыстайце /start для вяртання ў меню."
+                )
+            else:
+                edit_telegram_message(
+                    chat_id, 
+                    message_id,
+                    "❌ <b>Памылка пры пераліку рэйтынгу</b>\n\n"
+                    "Не атрымалася пералічыць рэйтынгі.\n\n"
+                    "Выкарыстайце /start для вяртання ў меню."
+                )
+        except Exception as e:
+            print(f"Error in rating recomputation: {e}")
+            import traceback
+            traceback.print_exc()
+            edit_telegram_message(
+                chat_id, 
+                message_id,
+                f"❌ <b>Памылка</b>\n\n{str(e)}\n\nВыкарыстайце /start для вяртання ў меню."
+            )
+        
         return {"statusCode": 200}
     
     # Determine mode for sync operations

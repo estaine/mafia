@@ -1273,6 +1273,25 @@
             color: #c0392b;
         }
 
+        .rating-cell {
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+
+        .rating-value {
+            color: #d4af37;
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        .rd-indicator {
+            color: #7f8c8d;
+            font-size: 0.85em;
+            font-weight: normal;
+            margin-left: 2px;
+        }
+
         .percentage-cell {
             color: #2c3e50;
             font-weight: 600;
@@ -1933,6 +1952,7 @@
                 <thead>
                     <tr>
                         <th class="sortable" data-column="name" title="Гулец">Гулец</th>
+                        <th class="sortable" data-column="rating" title="Рэйтынг Glicko-2">Рэйтынг</th>
                         <th class="sortable" data-column="mPlus" title="Перамогі за мірных">М+</th>
                         <th class="sortable" data-column="mMinus" title="Паразы за мірных">М-</th>
                         <th class="sortable" data-column="shPlus" title="Перамогі за шэрыфа">Ш+</th>
@@ -2027,6 +2047,8 @@
         function mapSupabaseData(dbRow) {
             return {
                 name: dbRow.name || '',
+                rating: Math.round(parseFloat(dbRow.rating) || 1500),
+                ratingDeviation: Math.round(parseFloat(dbRow.rating_deviation) || 350),
                 mPlus: dbRow.m_plus || 0,
                 mMinus: dbRow.m_minus || 0,
                 shPlus: dbRow.sh_plus || 0,
@@ -2317,6 +2339,13 @@
                 const tdName = document.createElement('td');
                 tdName.textContent = player.name;
                 tr.appendChild(tdName);
+
+                // Rating
+                const tdRating = document.createElement('td');
+                tdRating.className = 'rating-cell';
+                tdRating.title = `Рэйтынг Glicko-2 (адхіленне: ±${player.ratingDeviation})`;
+                tdRating.innerHTML = `<span class="rating-value">${player.rating}</span> <span class="rd-indicator">±${player.ratingDeviation}</span>`;
+                tr.appendChild(tdRating);
 
                 // M+
                 const tdMPlus = document.createElement('td');
