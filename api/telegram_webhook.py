@@ -511,24 +511,15 @@ def handle_callback_query(callback_query: Dict) -> Dict[str, Any]:
         edit_telegram_message(chat_id, message_id, "⏳ <b>Пералік рэйтынгу...</b>\n\nКалі ласка, пачакайце.")
         
         try:
-            # Import rating engine (in Vercel, modules are in root)
-            import sys
-            import os
-            
-            # Add parent directory to path
-            parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            if parent_dir not in sys.path:
-                sys.path.insert(0, parent_dir)
-            
-            # Import modules from root directory
-            import rating_engine
-            import sync_engine
+            # Import from local api directory (Vercel includes these in deployment)
+            from rating_engine import full_recompute
+            from sync_engine import SupabaseAPI
             
             # Create API instance
-            api = sync_engine.SupabaseAPI(SUPABASE_URL, SUPABASE_KEY)
+            api = SupabaseAPI(SUPABASE_URL, SUPABASE_KEY)
             
             # Run full recomputation
-            success = rating_engine.full_recompute(api)
+            success = full_recompute(api)
             
             if success:
                 edit_telegram_message(
