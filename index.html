@@ -414,7 +414,8 @@
         }
 
         #dataTable {
-            table-layout: fixed;
+            table-layout: auto;
+            min-width: 100%;
         }
 
         #dataTable th:first-child {
@@ -481,6 +482,8 @@
             text-transform: uppercase;
             font-size: 12px;
             letter-spacing: 0.5px;
+            outline: none;
+            box-shadow: none;
         }
 
         th:hover {
@@ -488,21 +491,41 @@
             color: #ffffff;
         }
 
+        th:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
         th.sortable::after {
             content: ' ⇅';
             opacity: 0.4;
+            display: inline-block;
+            width: 1em;
+            text-align: center;
+        }
+
+        th.sorted-asc,
+        th.sorted-desc {
+            outline: none;
+            box-shadow: none;
         }
 
         th.sorted-asc::after {
             content: ' ▲';
             opacity: 1;
             color: #ecf0f1;
+            display: inline-block;
+            width: 1em;
+            text-align: center;
         }
 
         th.sorted-desc::after {
             content: ' ▼';
             opacity: 1;
             color: #ecf0f1;
+            display: inline-block;
+            width: 1em;
+            text-align: center;
         }
 
         th:first-child {
@@ -1111,6 +1134,50 @@
             font-weight: 500;
             border: 1px solid #2c3e50;
             font-size: 13px;
+            outline: none;
+            box-shadow: none;
+        }
+
+        .stats-table th:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
+        .stats-table th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .stats-table th.sortable::after {
+            content: ' ⇅';
+            opacity: 0.4;
+            display: inline-block;
+            width: 1em;
+            text-align: center;
+        }
+
+        .stats-table th.sorted-asc,
+        .stats-table th.sorted-desc {
+            outline: none;
+            box-shadow: none;
+        }
+
+        .stats-table th.sorted-asc::after {
+            content: ' ▲';
+            opacity: 1;
+            color: #ecf0f1;
+            display: inline-block;
+            width: 1em;
+            text-align: center;
+        }
+
+        .stats-table th.sorted-desc::after {
+            content: ' ▼';
+            opacity: 1;
+            color: #ecf0f1;
+            display: inline-block;
+            width: 1em;
+            text-align: center;
         }
 
         .stats-table td {
@@ -1407,6 +1474,9 @@
                 content: 'Σ ⇅';
                 font-size: 12px;
                 font-weight: bold;
+                display: inline-block;
+                min-width: 2.5em;
+                text-align: center;
             }
 
             #dataTable th:nth-child(20).sortable::after {
@@ -1419,6 +1489,9 @@
                 font-weight: bold;
                 opacity: 1;
                 color: #ecf0f1;
+                display: inline-block;
+                min-width: 2.5em;
+                text-align: center;
             }
 
             #dataTable th:nth-child(20).sorted-desc::after {
@@ -1427,6 +1500,9 @@
                 font-weight: bold;
                 opacity: 1;
                 color: #ecf0f1;
+                display: inline-block;
+                min-width: 2.5em;
+                text-align: center;
             }
 
             /* Make player name column a bit wider, compress percentage columns */
