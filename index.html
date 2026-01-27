@@ -3493,11 +3493,15 @@
                     tooltipText = `${p1RoleName} | ${p2RoleName}: 0 гульняў`;
                 }
                 
+                // For parentRowIndex 3 (player 1 black, player 2 red), swap wins and losses to match the parent row display
+                const displayWins = parentRowIndex === 3 ? stats.losses : stats.wins;
+                const displayLosses = parentRowIndex === 3 ? stats.wins : stats.losses;
+                
                 detailRows += `
                     <tr class="detail-row" data-parent-row="${parentRowIndex}">
                         <td class="role-detail ${p1ColorClass}">${p1RoleName}</td>
                         <td class="role-detail ${p2ColorClass}">${p2RoleName}</td>
-                        <td>${renderStatBar(stats.wins, stats.losses, colorClass, `${parentRowIndex}-${roleKey}`, {
+                        <td>${renderStatBar(displayWins, displayLosses, colorClass, `${parentRowIndex}-${roleKey}`, {
                             rowType: 'role-detail',
                             player1: player1Name,
                             player2: player2Name,
@@ -4303,6 +4307,13 @@
         let currentPartnerPage = 1;
         const partnersPerPage = 20;
 
+        // Comparison games pagination state
+        let comparisonCommonGames = [];
+        let currentComparisonGamePage = 1;
+        let comparisonPlayer1Name = '';
+        let comparisonPlayer2Name = '';
+        const comparisonGamesPerPage = 20;
+
         // Render games list table with pagination
         function renderGamesTable(games, page = 1) {
             allGames = games;
@@ -4392,6 +4403,29 @@
             }
         }
 
+        // Navigate to a specific comparison game page
+        function goToComparisonGamePage(page) {
+            // Find the comparison games section (it's the third stats-section in comparison mode)
+            const allStatsSections = document.querySelectorAll('.stats-section');
+            const comparisonGamesSection = allStatsSections[2]; // Third section (0-indexed)
+            
+            if (comparisonGamesSection && comparisonCommonGames.length > 0) {
+                // Re-render the table with the new page
+                // We need to reconstruct games1 and games2 from comparisonCommonGames
+                const games1 = comparisonCommonGames.map(cg => cg.player1);
+                const games2 = comparisonCommonGames.map(cg => cg.player2);
+                
+                const newTableHTML = renderComparisonGamesTable(
+                    games1, 
+                    games2, 
+                    comparisonPlayer1Name, 
+                    comparisonPlayer2Name, 
+                    page
+                );
+                comparisonGamesSection.innerHTML = `<h3>Гульні</h3>${newTableHTML}`;
+            }
+        }
+
         // Show player stats page
         async function showPlayerStats(playerName) {
             // Set player name in input field and update selected player
@@ -4467,6 +4501,111 @@
             }
         }
 
+        // Render comparison games table showing games where both players participated
+        function renderComparisonGamesTable(games1, games2, player1Name, player2Name, page = 1) {
+            // Store player names for pagination
+            comparisonPlayer1Name = player1Name;
+            comparisonPlayer2Name = player2Name;
+            
+            // Find common games
+            const player1GameMap = {};
+            games1.forEach(game => {
+                player1GameMap[game.game_id] = game;
+            });
+
+            const commonGames = [];
+            games2.forEach(game => {
+                if (player1GameMap[game.game_id]) {
+                    commonGames.push({
+                        player1: player1GameMap[game.game_id],
+                        player2: game
+                    });
+                }
+            });
+
+            // Sort by date (newest first)
+            commonGames.sort((a, b) => new Date(b.player1.game_date) - new Date(a.player1.game_date));
+
+            // Store common games for pagination
+            comparisonCommonGames = commonGames;
+            currentComparisonGamePage = page;
+
+            if (commonGames.length === 0) {
+                return '<p>Няма агульных гульняў</p>';
+            }
+
+            const formatDate = (dateStr) => {
+                if (!dateStr) return '—';
+                const date = new Date(dateStr);
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}.${month}.${year}`;
+            };
+
+            // Calculate pagination
+            const totalPages = Math.ceil(commonGames.length / comparisonGamesPerPage);
+            const startIdx = (page - 1) * comparisonGamesPerPage;
+            const endIdx = startIdx + comparisonGamesPerPage;
+            const paginatedGames = commonGames.slice(startIdx, endIdx);
+
+            const rows = paginatedGames.map(({ player1, player2 }) => {
+                const gameNumber = player1.game_number ? `#${player1.game_number}` : `#${player1.game_id}`;
+                const p1Role = roleNames[player1.role_code] || player1.role_code;
+                const p2Role = roleNames[player2.role_code] || player2.role_code;
+                const redWon = !player1.mafia_won;
+                const victoryText = redWon ? 'Мір' : 'Мафія';
+                const victoryColor = redWon ? '#27ae60' : '#c0392b';
+                
+                // Check if each player won
+                const p1Won = player1.player_won;
+                const p2Won = player2.player_won;
+                
+                // Apply bold to winning roles
+                const p1RoleFormatted = p1Won ? `<strong>${p1Role}</strong>` : p1Role;
+                const p2RoleFormatted = p2Won ? `<strong>${p2Role}</strong>` : p2Role;
+                
+                return `
+                    <tr>
+                        <td>${gameNumber}</td>
+                        <td>${formatDate(player1.game_date)}</td>
+                        <td>${p1RoleFormatted}</td>
+                        <td>${p2RoleFormatted}</td>
+                        <td style="color: ${victoryColor}; font-weight: 600;">${victoryText}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Pagination controls
+            const paginationHTML = commonGames.length > comparisonGamesPerPage ? `
+                <div class="pagination">
+                    <button class="pagination-btn" ${page === 1 ? 'disabled' : ''} onclick="goToComparisonGamePage(1)">«</button>
+                    <button class="pagination-btn" ${page === 1 ? 'disabled' : ''} onclick="goToComparisonGamePage(${page - 1})">‹</button>
+                    <span class="pagination-info">Старонка ${page} з ${totalPages} (усяго гульняў: ${commonGames.length})</span>
+                    <button class="pagination-btn" ${page === totalPages ? 'disabled' : ''} onclick="goToComparisonGamePage(${page + 1})">›</button>
+                    <button class="pagination-btn" ${page === totalPages ? 'disabled' : ''} onclick="goToComparisonGamePage(${totalPages})">»</button>
+                </div>
+            ` : '';
+
+            return `
+                <table class="games-table">
+                    <thead>
+                        <tr>
+                            <th>Гульня</th>
+                            <th>Дата</th>
+                            <th>${player1Name}</th>
+                            <th>${player2Name}</th>
+                            <th>Перамога</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+                ${paginationHTML}
+            `;
+        }
+
         // Show comparison stats for two players
         async function showComparisonStats(player1Name, player2Name) {
             // Update header title with both player names
@@ -4521,6 +4660,10 @@
                     <div class="stats-section">
                         <h3>Персанальная статыстыка</h3>
                         ${renderPersonalStatsTable(h2hStats, player1Name, player2Name)}
+                    </div>
+                    <div class="stats-section">
+                        <h3>Гульні</h3>
+                        ${renderComparisonGamesTable(games1, games2, player1Name, player2Name)}
                     </div>
                 `;
 
