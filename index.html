@@ -445,10 +445,7 @@
 
         #dataTable th[data-column="redPct"],
         #dataTable th[data-column="blackPct"],
-        #dataTable th[data-column="winPct"] {
-            width: 65px;
-        }
-
+        #dataTable th[data-column="winPct"],
         #dataTable th[data-column="rating"] {
             width: 65px;
         }
@@ -1914,7 +1911,7 @@
                         <th class="sortable" data-column="totalLosses" title="Усяго параз">-</th>
                         <th class="sortable" data-column="total" title="Усяго гульняў">Усяго</th>
                         <th class="sortable" data-column="winPct" title="Адсотак перамог">%</th>
-                        <th class="sortable" data-column="rating" title="Рэйтынг Glicko-2">Рэйтынг</th>
+                        <th class="sortable" data-column="rating" title="Рэйтынг Glicko-2">R</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -2176,6 +2173,7 @@
                 }
                 
                 const ratings = await response.json();
+                console.log('📊 Fetched ratings for', ratings.length, 'players');
                 
                 // Need to fetch player names to map ID to name
                 const playerNamesUrl = `${SUPABASE_URL}/rest/v1/player?select=id,name`;
@@ -2211,11 +2209,16 @@
                 });
                 
                 // Merge rating data into player data
-                return playerData.map(player => ({
+                const enrichedData = playerData.map(player => ({
                     ...player,
                     rating: ratingMap[player.name]?.rating || 1500,
                     ratingDeviation: ratingMap[player.name]?.ratingDeviation || 350
                 }));
+                
+                const playersWithCustomRating = enrichedData.filter(p => ratingMap[p.name]).length;
+                console.log('📊 Enriched', playersWithCustomRating, 'players with custom ratings');
+                
+                return enrichedData;
             } catch (error) {
                 console.error('Error enriching player data with rating:', error);
                 return playerData;
@@ -2248,18 +2251,25 @@
                 console.log('After date filter:', filteredGames.length, 'games');
             }
             
-            // Preserve hidden status before recalculation
+            // Preserve hidden status and ratings before recalculation
             const hiddenStatusMap = {};
+            const ratingMap = {};
             playerData.forEach(p => {
                 hiddenStatusMap[p.name] = p.isHidden || false;
+                ratingMap[p.name] = {
+                    rating: p.rating || 1500,
+                    ratingDeviation: p.ratingDeviation || 350
+                };
             });
             
             // Recalculate player data from filtered games
             playerData = calculatePlayerDataFromGames(filteredGames);
             
-            // Restore hidden status
+            // Restore hidden status and ratings
             playerData.forEach(p => {
                 p.isHidden = hiddenStatusMap[p.name] || false;
+                p.rating = ratingMap[p.name]?.rating || 1500;
+                p.ratingDeviation = ratingMap[p.name]?.ratingDeviation || 350;
             });
             
             console.log('After recalc:', playerData.length, 'players');
@@ -2492,8 +2502,8 @@
                 // Rating (last column)
                 const tdRating = document.createElement('td');
                 tdRating.className = 'rating-cell';
-                tdRating.title = `Рэйтынг Glicko-2 (адхіленне: ±${player.ratingDeviation})`;
-                tdRating.innerHTML = `<span class="rating-value">${player.rating}</span> <span class="rd-indicator">±${player.ratingDeviation}</span>`;
+                tdRating.title = `Рэйтынг Glicko-2: ${player.rating} (адхіленне: ±${player.ratingDeviation})`;
+                tdRating.innerHTML = `<span class="rating-value">${player.rating}</span>`;
                 tr.appendChild(tdRating);
 
                 tableBody.appendChild(tr);
