@@ -1,21 +1,21 @@
 {
   "glicko2": {
     "initial_rating": 1500.0,
-    "initial_rd": 275.0,
-    "initial_sigma": 0.07,
-    "tau": 2,
-    "weight_multiplier": 2.15,
+    "initial_rd": 150.0,
+    "initial_sigma": 0.06,
+    "tau": 1.25,
+    "weight_multiplier": 1.85,
     "epsilon": 0.000001
   },
   "rating_scaling": {
     "enabled": true,
-    "rating_sensitivity": 210.0,
-    "rd_dampening": 0.042,
-    "max_scaling": 1.80,
-    "min_scaling": 0.96,
+    "rating_sensitivity": 240.0,
+    "rd_dampening": 0.048,
+    "max_scaling": 1.55,
+    "min_scaling": 0.97,
     "rd_baseline_scaling": 52.0,
-    "rd_baseline_correction": 54.0,
-    "rd_correction_winner_factor": 0.050,
+    "rd_baseline_correction": 51.0,
+    "rd_correction_winner_factor": 0.065,
     "rd_correction_loser_factor": 0.0005
   },
   "description": {
