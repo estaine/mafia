@@ -4072,19 +4072,28 @@
                 return;
             }
             
+            // Check if player has less than 10 games
+            if (ratingHistory.length < 10) {
+                chartContainer.innerHTML = '<div class="rating-chart-loading">Графік з\'явіцца пасля 10 гульняў</div>';
+                return;
+            }
+            
+            // Skip first 10 games and show from game 11 onwards
+            const filteredHistory = ratingHistory.slice(10);
+            
             // Prepare chart container
             chartContainer.innerHTML = '<canvas id="ratingChart"></canvas>';
             const canvas = document.getElementById('ratingChart');
             const ctx = canvas.getContext('2d');
             
             // Prepare data
-            const labels = ratingHistory.map(r => {
+            const labels = filteredHistory.map(r => {
                 const date = new Date(r.game_date);
                 return date.toLocaleDateString('be-BY', { day: '2-digit', month: '2-digit', year: 'numeric' });
             });
             
-            const ratings = ratingHistory.map(r => Math.round(r.rating_after));
-            const gameNumbers = ratingHistory.map(r => r.game_number);
+            const ratings = filteredHistory.map(r => Math.round(r.rating_after));
+            const gameNumbers = filteredHistory.map(r => r.game_number);
             
             // Create chart
             new Chart(ctx, {
