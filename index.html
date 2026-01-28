@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Статыстыка Мафіі</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -1117,6 +1118,23 @@
             letter-spacing: 1px;
             border-bottom: 2px solid #2c3e50;
             padding-bottom: 8px;
+        }
+
+        .rating-chart-container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            height: 400px;
+            position: relative;
+        }
+
+        .rating-chart-loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 400px;
+            color: #7f8c8d;
         }
 
         .stats-table {
@@ -3429,7 +3447,8 @@
                     method: 'GET',
                     headers: {
                         'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Range': '0-9999'
                     }
                 });
                 
@@ -3441,6 +3460,92 @@
             } catch (error) {
                 console.error('Error fetching game participants:', error);
                 throw error;
+            }
+        }
+
+        // Fetch player rating history
+        async function fetchPlayerRatingHistory(playerName) {
+            try {
+                // First get player ID
+                const playerResponse = await fetch(
+                    `${SUPABASE_URL}/rest/v1/player?select=id&name=eq.${encodeURIComponent(playerName)}`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        }
+                    }
+                );
+                
+                if (!playerResponse.ok) {
+                    throw new Error('Failed to fetch player ID');
+                }
+                
+                const players = await playerResponse.json();
+                if (!players || players.length === 0) {
+                    return [];
+                }
+                
+                const playerId = players[0].id;
+                
+                // Fetch rating history with game dates
+                const ratingResponse = await fetch(
+                    `${SUPABASE_URL}/rest/v1/player_rating_history?select=game_id,rating_after,rd_after,created_at&player_id=eq.${playerId}&order=game_id.asc`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'Range': '0-9999'
+                        }
+                    }
+                );
+                
+                if (!ratingResponse.ok) {
+                    throw new Error('Failed to fetch rating history');
+                }
+                
+                const ratingHistory = await ratingResponse.json();
+                
+                // Fetch game dates
+                const gameIds = ratingHistory.map(r => r.game_id);
+                if (gameIds.length === 0) {
+                    return [];
+                }
+                
+                const gameIdFilter = gameIds.map(id => `id.eq.${id}`).join(',');
+                const gamesResponse = await fetch(
+                    `${SUPABASE_URL}/rest/v1/game?select=id,game_date&or=(${gameIdFilter})`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'Range': '0-9999'
+                        }
+                    }
+                );
+                
+                if (!gamesResponse.ok) {
+                    throw new Error('Failed to fetch game dates');
+                }
+                
+                const games = await gamesResponse.json();
+                const gameMap = {};
+                games.forEach(g => {
+                    gameMap[g.id] = g.game_date;
+                });
+                
+                // Merge rating history with game dates
+                return ratingHistory.map(r => ({
+                    ...r,
+                    game_date: gameMap[r.game_id] || r.created_at
+                }));
+                
+            } catch (error) {
+                console.error('Error fetching rating history:', error);
+                return [];
             }
         }
 
@@ -3944,6 +4049,115 @@
                     const highlightedCells = table.querySelectorAll('td.highlight');
                     highlightedCells.forEach(cell => cell.classList.remove('highlight'));
                 });
+            });
+        }
+
+        // Render rating history chart
+        async function renderRatingChart(playerName) {
+            const chartContainer = document.getElementById('ratingChartContainer');
+            if (!chartContainer) return;
+            
+            // Show loading state
+            chartContainer.innerHTML = '<div class="rating-chart-loading">Загрузка рэйтынгу...</div>';
+            
+            // Fetch rating history
+            const ratingHistory = await fetchPlayerRatingHistory(playerName);
+            
+            if (!ratingHistory || ratingHistory.length === 0) {
+                chartContainer.innerHTML = '<div class="rating-chart-loading">Няма дадзеных па рэйтынгу</div>';
+                return;
+            }
+            
+            // Prepare chart container
+            chartContainer.innerHTML = '<canvas id="ratingChart"></canvas>';
+            const canvas = document.getElementById('ratingChart');
+            const ctx = canvas.getContext('2d');
+            
+            // Prepare data
+            const labels = ratingHistory.map(r => {
+                const date = new Date(r.game_date);
+                return date.toLocaleDateString('be-BY', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            });
+            
+            const ratings = ratingHistory.map(r => Math.round(r.rating_after));
+            const rds = ratingHistory.map(r => Math.round(r.rd_after));
+            
+            // Create chart
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Рэйтынг',
+                        data: ratings,
+                        borderColor: '#2c3e50',
+                        backgroundColor: 'rgba(44, 62, 80, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#d4af37',
+                        pointBorderColor: '#2c3e50',
+                        pointBorderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(44, 62, 80, 0.95)',
+                            titleColor: '#ecf0f1',
+                            bodyColor: '#ecf0f1',
+                            borderColor: '#d4af37',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                title: function(context) {
+                                    return `Гульня ${context[0].dataIndex + 1} • ${context[0].label}`;
+                                },
+                                label: function(context) {
+                                    const rating = context.parsed.y;
+                                    const rd = rds[context.dataIndex];
+                                    return [
+                                        `Рэйтынг: ${rating}`,
+                                        `Адхіленне: ±${rd}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
             });
         }
 
@@ -4703,6 +4917,12 @@
                         ${renderPartnerOpponentTable(partnerStats, 1)}
                     </div>
                     <div class="stats-section">
+                        <h3>Рэйтынг</h3>
+                        <div class="rating-chart-container" id="ratingChartContainer">
+                            <div class="rating-chart-loading">Загрузка...</div>
+                        </div>
+                    </div>
+                    <div class="stats-section">
                         <h3>Гісторыя гульняў</h3>
                         ${renderGamesTable(games)}
                     </div>
@@ -4711,6 +4931,9 @@
                 // Setup sorting for partner table
                 setupPartnerTableSorting();
                 updatePartnerTableSortIndicators();
+                
+                // Render rating chart
+                renderRatingChart(playerName);
             } catch (error) {
                 console.error('Error loading player stats:', error);
                 playerStatsBody.innerHTML = `
