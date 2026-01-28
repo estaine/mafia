@@ -1,22 +1,22 @@
 {
   "glicko2": {
     "initial_rating": 1500.0,
-    "initial_rd": 175.0,
+    "initial_rd": 275.0,
     "initial_sigma": 0.07,
     "tau": 2,
-    "weight_multiplier": 2.5,
+    "weight_multiplier": 2.15,
     "epsilon": 0.000001
   },
   "rating_scaling": {
     "enabled": true,
-    "rating_sensitivity": 205.0,
-    "rd_dampening": 0.041,
-    "max_scaling": 1.85,
-    "min_scaling": 1.0,
-    "rd_baseline_scaling": 56.0,
+    "rating_sensitivity": 210.0,
+    "rd_dampening": 0.042,
+    "max_scaling": 1.80,
+    "min_scaling": 0.96,
+    "rd_baseline_scaling": 52.0,
     "rd_baseline_correction": 54.0,
     "rd_correction_winner_factor": 0.050,
-    "rd_correction_loser_factor": 0.00075
+    "rd_correction_loser_factor": 0.0005
   },
   "description": {
     "initial_rating": "Starting rating for all new players (default: 1500)",
