@@ -9,10 +9,14 @@
   },
   "rating_scaling": {
     "enabled": true,
-    "rating_sensitivity": 310.0,
-    "rd_dampening": 0.036,
-    "max_scaling": 1.60,
-    "min_scaling": 0.91
+    "rating_sensitivity": 220.0,
+    "rd_dampening": 0.046,
+    "max_scaling": 1.70,
+    "min_scaling": 0.86,
+    "rd_baseline_scaling": 52.0,
+    "rd_baseline_correction": 51.0,
+    "rd_correction_winner_factor": 0.075,
+    "rd_correction_loser_factor": 0.002
   },
   "description": {
     "initial_rating": "Starting rating for all new players (default: 1500)",
@@ -25,7 +29,11 @@
     "rating_scaling.rating_sensitivity": "Controls scaling strength. Higher = less aggressive. Range: 200-500",
     "rating_scaling.rd_dampening": "Reduces scaling effect for high RD players. Higher = more dampening. Range: 0.01-0.03",
     "rating_scaling.max_scaling": "Maximum multiplier for rating changes. Range: 1.3-2.0",
-    "rating_scaling.min_scaling": "Minimum multiplier for rating changes. Range: 0.5-0.9"
+    "rating_scaling.min_scaling": "Minimum multiplier for rating changes. Range: 0.5-0.9",
+    "rating_scaling.rd_baseline_scaling": "RD baseline for rating-based scaling calculations. Range: 50-55",
+    "rating_scaling.rd_baseline_correction": "RD baseline for RD correction in process_game. Range: 50-55",
+    "rating_scaling.rd_correction_winner_factor": "RD correction strength for winners. Higher = stronger dampening. Range: 0.05-0.10",
+    "rating_scaling.rd_correction_loser_factor": "RD correction strength for losers. Higher = stronger dampening. Range: 0.001-0.005"
   }
 }
 

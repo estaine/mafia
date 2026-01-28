@@ -45,7 +45,11 @@ def load_glicko2_config():
         'rating_sensitivity': 350.0,
         'rd_dampening': 0.018,
         'max_scaling': 1.45,
-        'min_scaling': 0.75
+        'min_scaling': 0.75,
+        'rd_baseline_scaling': 52.0,
+        'rd_baseline_correction': 51.0,
+        'rd_correction_winner_factor': 0.075,
+        'rd_correction_loser_factor': 0.002
     }
     
     try:
@@ -312,7 +316,7 @@ def apply_rating_based_scaling(
     
     # RD dampening: higher RD = less scaling effect
     # Normal RD is ~52, so we measure deviation from that
-    rd_baseline = 52.0
+    rd_baseline = config.get('rd_baseline_scaling', 52.0)
     rd_excess = max(0, player_rd - rd_baseline)
     rd_factor = 1.0 / (1.0 + rd_excess * config['rd_dampening'])
     
@@ -425,18 +429,23 @@ def process_game(game_id: int, players_data: List[Tuple[int, bool]],
         normalized_rating = rating_after_tentative.rating - correction
         normalized_change = normalized_rating - rating_before.rating
         
-        # Apply RD correction: high RD players' changes should be dampened
-        # This counteracts the base Glicko-2 tendency to make high RD players more volatile
+        # Apply RD correction: ALL players get correction based on RD deviation from baseline
+        # This counteracts the base Glicko-2 tendency to make higher-RD players change more
         # Apply strongly to winners, minimally to losers
-        rd_baseline = 52.0
+        rd_baseline = _rating_scaling_config.get('rd_baseline_correction', 51.0)
         is_win = normalized_change > 0
-        if rating_before.rd > rd_baseline and _rating_scaling_config.get('enabled', False):
-            rd_excess = rating_before.rd - rd_baseline
+        if _rating_scaling_config.get('enabled', False):
+            rd_deviation = rating_before.rd - rd_baseline
             # Use different correction factors for wins vs losses
+            winner_factor = _rating_scaling_config.get('rd_correction_winner_factor', 0.075)
+            loser_factor = _rating_scaling_config.get('rd_correction_loser_factor', 0.002)
+            
             if is_win:
-                rd_correction_factor = 1.0 / (1.0 + rd_excess * 0.022)  # Strong dampening for winners
+                # Dampen changes for ANY RD above baseline - aggressive but balanced
+                rd_correction_factor = 1.0 / (1.0 + abs(rd_deviation) * winner_factor) if rd_deviation > 0 else 1.0
             else:
-                rd_correction_factor = 1.0 / (1.0 + rd_excess * 0.002)  # Minimal dampening for losers
+                # Minimal dampening for losers
+                rd_correction_factor = 1.0 / (1.0 + abs(rd_deviation) * loser_factor) if rd_deviation > 0 else 1.0
             normalized_change = normalized_change * rd_correction_factor
         
         # Apply rating-based scaling to the RD-corrected change
