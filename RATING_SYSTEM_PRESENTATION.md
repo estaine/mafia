@@ -151,7 +151,7 @@ Traditional win percentage treats all opponents equally - beating a beginner = b
 
 **Challenge:** Mafia is a 10-player team game!
 - Not 1v1 like chess
-- Citizens (8) vs Mafia (2)
+- Citizens (6) + Sheriff (1) vs Mafia (3 including Don)
 
 **Our Solution:** 45 mini-games per game
 - Each player plays against all 9 others
@@ -170,14 +170,14 @@ Traditional win percentage treats all opponents equally - beating a beginner = b
 **Player:** Сяргей (Citizen, won)
 
 **His opponents:**
-- 7 teammates (also won): 7 × 0.5 = 3.5 points
-- 2 mafia (lost): 2 × 1.0 = 2.0 points
-- **Total: 5.5 points out of 9 possible**
+- 6 teammates (also won): 6 × 0.5 = 3.0 points
+- 3 mafia (lost): 3 × 1.0 = 3.0 points
+- **Total: 6.0 points out of 9 possible**
 
 **If Сяргей was Mafia (lost):**
-- 1 teammate (also lost): 1 × 0.5 = 0.5 points
-- 8 citizens (won): 8 × 0.0 = 0.0 points
-- **Total: 0.5 points out of 9 possible**
+- 2 teammates (also lost): 2 × 0.5 = 1.0 points
+- 7 citizens (won): 7 × 0.0 = 0.0 points
+- **Total: 1.0 points out of 9 possible**
 
 ---
 
