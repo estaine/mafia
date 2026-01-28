@@ -23,6 +23,37 @@ ALLOWED_USERS = set(int(uid.strip()) for uid in ALLOWED_USER_IDS.split(',') if u
 
 
 # ============================================================================
+# GLICKO-2 CONFIG LOADER
+# ============================================================================
+
+def load_glicko2_config():
+    """Load Glicko-2 parameters from config file."""
+    config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'glicko2_config.json')
+    
+    # Default values (fallback if config file not found)
+    default_config = {
+        'initial_rating': 1500.0,
+        'initial_rd': 225.0,
+        'initial_sigma': 0.06,
+        'tau': 1.25,
+        'weight_multiplier': 1.75,
+        'epsilon': 0.000001
+    }
+    
+    try:
+        with open(config_path, 'r') as f:
+            config_data = json.load(f)
+            return config_data.get('glicko2', default_config)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Warning: Could not load config file, using defaults: {e}")
+        return default_config
+
+
+# Load configuration
+_glicko2_config = load_glicko2_config()
+
+
+# ============================================================================
 # SUPABASE API CLIENT
 # ============================================================================
 
@@ -91,13 +122,13 @@ class SupabaseAPI:
 # GLICKO-2 RATING ENGINE
 # ============================================================================
 
-# Glicko-2 Constants
-INITIAL_RATING = 1500.0
-INITIAL_RD = 225.0  # Updated from 350.0
-INITIAL_SIGMA = 0.06
-TAU = 1.25  # Updated from 0.5 (higher volatility)
-WEIGHT_MULTIPLIER = 1.75  # Multiplier for micromatch weights
-EPSILON = 0.000001  # Convergence tolerance
+# Glicko-2 Constants (loaded from glicko2_config.json)
+INITIAL_RATING = _glicko2_config['initial_rating']
+INITIAL_RD = _glicko2_config['initial_rd']
+INITIAL_SIGMA = _glicko2_config['initial_sigma']
+TAU = _glicko2_config['tau']
+WEIGHT_MULTIPLIER = _glicko2_config['weight_multiplier']
+EPSILON = _glicko2_config['epsilon']
 
 
 @dataclass

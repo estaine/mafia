@@ -1,0 +1,19 @@
+{
+  "glicko2": {
+    "initial_rating": 1500.0,
+    "initial_rd": 175.0,
+    "initial_sigma": 0.06,
+    "tau": 1.5,
+    "weight_multiplier": 2.25,
+    "epsilon": 0.000001
+  },
+  "description": {
+    "initial_rating": "Starting rating for all new players (default: 1500)",
+    "initial_rd": "Starting Rating Deviation (uncertainty). Lower = less volatile. Range: 100-350",
+    "initial_sigma": "Starting volatility parameter. Range: 0.03-0.12",
+    "tau": "System volatility constraint. Higher = more volatile ratings. Range: 0.3-2.0",
+    "weight_multiplier": "Multiplier for micromatch weights. Higher = bigger rating swings. Range: 1.0-3.0",
+    "epsilon": "Convergence tolerance for calculations. Don't change unless you know what you're doing."
+  }
+}
+
