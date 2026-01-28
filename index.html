@@ -2596,7 +2596,7 @@
                 // Rating (last column)
                 const tdRating = document.createElement('td');
                 tdRating.className = 'rating-cell';
-                tdRating.title = `Рэйтынг: ${player.rating} (адхіленне: ±${player.ratingDeviation})`;
+                tdRating.title = `Рэйтынг Glicko-2: ${player.rating}`;
                 tdRating.innerHTML = `<span class="rating-value">${player.rating}</span>`;
                 tr.appendChild(tdRating);
 
@@ -3516,7 +3516,7 @@
                 
                 const gameIdFilter = gameIds.map(id => `id.eq.${id}`).join(',');
                 const gamesResponse = await fetch(
-                    `${SUPABASE_URL}/rest/v1/game?select=id,game_date&or=(${gameIdFilter})`,
+                    `${SUPABASE_URL}/rest/v1/game?select=id,game_number,game_date&or=(${gameIdFilter})`,
                     {
                         method: 'GET',
                         headers: {
@@ -3534,13 +3534,17 @@
                 const games = await gamesResponse.json();
                 const gameMap = {};
                 games.forEach(g => {
-                    gameMap[g.id] = g.game_date;
+                    gameMap[g.id] = {
+                        game_date: g.game_date,
+                        game_number: g.game_number
+                    };
                 });
                 
-                // Merge rating history with game dates
+                // Merge rating history with game dates and numbers
                 return ratingHistory.map(r => ({
                     ...r,
-                    game_date: gameMap[r.game_id] || r.created_at
+                    game_date: gameMap[r.game_id]?.game_date || r.created_at,
+                    game_number: gameMap[r.game_id]?.game_number || r.game_id
                 }));
                 
             } catch (error) {
@@ -4080,7 +4084,7 @@
             });
             
             const ratings = ratingHistory.map(r => Math.round(r.rating_after));
-            const rds = ratingHistory.map(r => Math.round(r.rd_after));
+            const gameNumbers = ratingHistory.map(r => r.game_number);
             
             // Create chart
             new Chart(ctx, {
@@ -4119,15 +4123,12 @@
                             displayColors: false,
                             callbacks: {
                                 title: function(context) {
-                                    return `Гульня ${context[0].dataIndex + 1} • ${context[0].label}`;
+                                    const gameNum = gameNumbers[context[0].dataIndex];
+                                    return `Гульня #${gameNum} • ${context[0].label}`;
                                 },
                                 label: function(context) {
                                     const rating = context.parsed.y;
-                                    const rd = rds[context.dataIndex];
-                                    return [
-                                        `Рэйтынг: ${rating}`,
-                                        `Адхіленне: ±${rd}`
-                                    ];
+                                    return `Рэйтынг: ${rating}`;
                                 }
                             }
                         }
