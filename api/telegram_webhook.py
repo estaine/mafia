@@ -93,9 +93,10 @@ class SupabaseAPI:
 
 # Glicko-2 Constants
 INITIAL_RATING = 1500.0
-INITIAL_RD = 350.0
+INITIAL_RD = 225.0  # Updated from 350.0
 INITIAL_SIGMA = 0.06
-TAU = 0.5  # System constant (volatility change constraint)
+TAU = 1.25  # Updated from 0.5 (higher volatility)
+WEIGHT_MULTIPLIER = 1.75  # Multiplier for micromatch weights
 EPSILON = 0.000001  # Convergence tolerance
 
 
@@ -131,13 +132,13 @@ def e_function(mu: float, mu_j: float, phi_j: float) -> float:
     return 1.0 / (1.0 + math.exp(-g_function(phi_j) * (mu - mu_j)))
 
 
-def compute_variance(mu: float, opponents: List[Tuple[float, float]]) -> float:
-    """Compute the estimated variance of the player's rating."""
+def compute_variance(mu: float, opponents: List[Tuple[float, float]], weights: List[float]) -> float:
+    """Compute the estimated variance of the player's rating with weights."""
     v_inv = 0.0
-    for mu_j, phi_j in opponents:
+    for (mu_j, phi_j), weight in zip(opponents, weights):
         g = g_function(phi_j)
         e = e_function(mu, mu_j, phi_j)
-        v_inv += g * g * e * (1.0 - e)
+        v_inv += weight * g * g * e * (1.0 - e)
     
     if v_inv < EPSILON:
         return 1e6
@@ -145,13 +146,14 @@ def compute_variance(mu: float, opponents: List[Tuple[float, float]]) -> float:
     return 1.0 / v_inv
 
 
-def compute_delta(mu: float, v: float, opponents: List[Tuple[float, float]], results: List[float]) -> float:
-    """Compute the improvement in rating based on game outcomes."""
+def compute_delta(mu: float, v: float, opponents: List[Tuple[float, float]], 
+                  results: List[float], weights: List[float]) -> float:
+    """Compute the improvement in rating based on game outcomes with weights."""
     delta_sum = 0.0
-    for (mu_j, phi_j), s in zip(opponents, results):
+    for (mu_j, phi_j), s, weight in zip(opponents, results, weights):
         g = g_function(phi_j)
         e = e_function(mu, mu_j, phi_j)
-        delta_sum += g * (s - e)
+        delta_sum += weight * g * (s - e)
     
     return v * delta_sum
 
@@ -200,8 +202,9 @@ def compute_new_sigma(phi: float, sigma: float, v: float, delta: float) -> float
     return math.exp(A / 2.0)
 
 
-def update_rating(player: PlayerRating, opponents: List[PlayerRating], results: List[float]) -> PlayerRating:
-    """Update a player's rating based on game results using Glicko-2."""
+def update_rating(player: PlayerRating, opponents: List[PlayerRating], 
+                  results: List[float], weights: List[float]) -> PlayerRating:
+    """Update a player's rating based on game results using Glicko-2 with weights."""
     if not opponents or not results:
         mu, phi = player.to_glicko2_scale()
         phi_star = math.sqrt(phi * phi + player.sigma * player.sigma)
@@ -211,15 +214,20 @@ def update_rating(player: PlayerRating, opponents: List[PlayerRating], results: 
     mu, phi = player.to_glicko2_scale()
     opponent_ratings = [opp.to_glicko2_scale() for opp in opponents]
     
-    v = compute_variance(mu, opponent_ratings)
-    delta = compute_delta(mu, v, opponent_ratings, results)
+    v = compute_variance(mu, opponent_ratings, weights)
+    delta = compute_delta(mu, v, opponent_ratings, results, weights)
     new_sigma = compute_new_sigma(phi, player.sigma, v, delta)
     phi_star = math.sqrt(phi * phi + new_sigma * new_sigma)
     phi_new = 1.0 / math.sqrt(1.0 / (phi_star * phi_star) + 1.0 / v)
-    mu_new = mu + phi_new * phi_new * sum(
-        g_function(phi_j) * (s - e_function(mu, mu_j, phi_j))
-        for (mu_j, phi_j), s in zip(opponent_ratings, results)
-    )
+    
+    # Compute weighted sum for mu update
+    weighted_sum = 0.0
+    for (mu_j, phi_j), s, weight in zip(opponent_ratings, results, weights):
+        g = g_function(phi_j)
+        e = e_function(mu, mu_j, phi_j)
+        weighted_sum += weight * g * (s - e)
+    
+    mu_new = mu + phi_new * phi_new * weighted_sum
     
     rating, rd, sigma = PlayerRating.from_glicko2_scale(mu_new, phi_new, new_sigma)
     return PlayerRating(player.player_id, rating, rd, sigma)
@@ -230,16 +238,23 @@ def process_game(game_id: int, players_data: List[Tuple[int, bool]],
     """
     Process a single game and compute rating changes for all players.
     
-    Uses micromatch approach: each player only plays against opposing team.
-    - Red team (7 players): each plays 3 matches vs Black team
-    - Black team (3 players): each plays 7 matches vs Red team
-    - NO matches between teammates (no 0.5 draws)
-    - Total: 21 unique micromatches per game (7 × 3)
+    Uses WEIGHTED micromatch approach with NORMALIZATION:
+    - Red team (7 players): each plays 3 matches with weight = WEIGHT_MULTIPLIER / 3
+    - Black team (3 players): each plays 7 matches with weight = WEIGHT_MULTIPLIER / 7
+    - NO matches between teammates
+    - Normalization forces total rating change = 0 (zero-sum)
     """
     if len(players_data) != 10:
         raise ValueError(f"Game {game_id} must have exactly 10 players, got {len(players_data)}")
     
-    results = {}
+    # Count team sizes for weight calculation
+    winners = [pid for pid, won in players_data if won]
+    losers = [pid for pid, won in players_data if not won]
+    winner_count = len(winners)
+    loser_count = len(losers)
+    
+    # Step 1: Calculate tentative rating changes with weights
+    tentative_results = {}
     
     for player_id, player_won in players_data:
         if player_id not in current_ratings:
@@ -248,29 +263,54 @@ def process_game(game_id: int, players_data: List[Tuple[int, bool]],
         rating_before = current_ratings[player_id]
         opponents = []
         game_results = []
+        weights = []
+        
+        # Calculate weight per micromatch
+        # Winner faces loser_count opponents, loser faces winner_count opponents
+        opponent_count = loser_count if player_won else winner_count
+        weight_per_match = WEIGHT_MULTIPLIER / opponent_count
         
         for other_id, other_won in players_data:
             if other_id == player_id:
                 continue
             
-            # ONLY match against opposing team (different outcomes)
-            # NO micromatches between teammates
+            # ONLY match against opposing team
             if player_won == other_won:
                 continue  # Skip teammates
             
             if other_id not in current_ratings:
                 current_ratings[other_id] = PlayerRating(other_id)
-            opponents.append(current_ratings[other_id])
             
-            # Player won, opponent lost
-            if player_won:
-                game_results.append(1.0)
-            else:
-                game_results.append(0.0)
+            opponents.append(current_ratings[other_id])
+            game_results.append(1.0 if player_won else 0.0)
+            weights.append(weight_per_match)
         
-        rating_after = update_rating(rating_before, opponents, game_results)
-        results[player_id] = (rating_before, rating_after)
-        current_ratings[player_id] = rating_after
+        rating_after = update_rating(rating_before, opponents, game_results, weights)
+        tentative_results[player_id] = (rating_before, rating_after)
+    
+    # Step 2: Normalize to force zero-sum
+    total_change = sum(
+        tentative_results[pid][1].rating - tentative_results[pid][0].rating
+        for pid, _ in players_data
+    )
+    correction = total_change / 10.0
+    
+    # Step 3: Apply normalization and update current_ratings
+    results = {}
+    for player_id, _ in players_data:
+        rating_before, rating_after_tentative = tentative_results[player_id]
+        
+        # Apply correction
+        normalized_rating = rating_after_tentative.rating - correction
+        rating_after_final = PlayerRating(
+            player_id,
+            normalized_rating,
+            rating_after_tentative.rd,
+            rating_after_tentative.sigma
+        )
+        
+        results[player_id] = (rating_before, rating_after_final)
+        current_ratings[player_id] = rating_after_final
     
     return results
 
