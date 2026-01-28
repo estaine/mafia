@@ -31,7 +31,7 @@ def load_glicko2_config():
     config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'glicko2_config.json')
     
     # Default values (fallback if config file not found)
-    default_config = {
+    default_glicko2_config = {
         'initial_rating': 1500.0,
         'initial_rd': 225.0,
         'initial_sigma': 0.06,
@@ -40,17 +40,27 @@ def load_glicko2_config():
         'epsilon': 0.000001
     }
     
+    default_rating_scaling_config = {
+        'enabled': False,
+        'rating_sensitivity': 350.0,
+        'rd_dampening': 0.018,
+        'max_scaling': 1.45,
+        'min_scaling': 0.75
+    }
+    
     try:
         with open(config_path, 'r') as f:
             config_data = json.load(f)
-            return config_data.get('glicko2', default_config)
+            glicko2_config = config_data.get('glicko2', default_glicko2_config)
+            rating_scaling_config = config_data.get('rating_scaling', default_rating_scaling_config)
+            return glicko2_config, rating_scaling_config
     except (FileNotFoundError, json.JSONDecodeError) as e:
         print(f"Warning: Could not load config file, using defaults: {e}")
-        return default_config
+        return default_glicko2_config, default_rating_scaling_config
 
 
 # Load configuration
-_glicko2_config = load_glicko2_config()
+_glicko2_config, _rating_scaling_config = load_glicko2_config()
 
 
 # ============================================================================
@@ -264,16 +274,84 @@ def update_rating(player: PlayerRating, opponents: List[PlayerRating],
     return PlayerRating(player.player_id, rating, rd, sigma)
 
 
+def apply_rating_based_scaling(
+    player_rating: float,
+    player_rd: float,
+    base_change: float,
+    opponent_avg_rating: float,
+    config: dict
+) -> float:
+    """
+    Scale rating change based on player rating relative to opponents,
+    with RD dampening effect.
+    
+    The scaling logic:
+    - Higher rating vs opponents + WIN = scale down (small gain)
+    - Lower rating vs opponents + WIN = scale up (big gain)
+    - Higher rating vs opponents + LOSS = scale up (big loss)
+    - Lower rating vs opponents + LOSS = scale down (small loss)
+    
+    Args:
+        player_rating: Player's rating before the game
+        player_rd: Player's rating deviation
+        base_change: Raw Glicko-2 rating change (after normalization)
+        opponent_avg_rating: Average rating of opponents
+        config: Scaling configuration from glicko2_config.json
+    
+    Returns:
+        Scaled rating change
+    """
+    if not config.get('enabled', False):
+        return base_change
+    
+    # Calculate rating difference (relative to opponents)
+    rating_diff = player_rating - opponent_avg_rating
+    
+    # Determine if this is a win or loss
+    is_win = base_change > 0
+    
+    # RD dampening: higher RD = less scaling effect
+    # Normal RD is ~52, so we measure deviation from that
+    rd_baseline = 52.0
+    rd_excess = max(0, player_rd - rd_baseline)
+    rd_factor = 1.0 / (1.0 + rd_excess * config['rd_dampening'])
+    
+    # Base scaling factor from rating difference
+    # For WINS: higher rating = scale down, lower rating = scale up
+    # For LOSSES: higher rating = scale up (more punishment), lower rating = scale down (less punishment)
+    rating_sensitivity = config['rating_sensitivity']
+    
+    if is_win:
+        # Win: higher rating diff = lower scaling factor
+        raw_scaling = 1.0 - (rating_diff / rating_sensitivity)
+    else:
+        # Loss: higher rating diff = higher scaling factor (more punishment)
+        # We INVERT the logic for losses
+        raw_scaling = 1.0 + (rating_diff / rating_sensitivity)
+    
+    # Apply RD dampening to scaling deviation from 1.0
+    adjusted_scaling = 1.0 + (raw_scaling - 1.0) * rd_factor
+    
+    # Clamp to reasonable bounds
+    scaling = max(
+        config['min_scaling'],
+        min(config['max_scaling'], adjusted_scaling)
+    )
+    
+    return base_change * scaling
+
+
 def process_game(game_id: int, players_data: List[Tuple[int, bool]], 
                  current_ratings: Dict[int, PlayerRating]) -> Dict[int, Tuple[PlayerRating, PlayerRating]]:
     """
     Process a single game and compute rating changes for all players.
     
-    Uses WEIGHTED micromatch approach with NORMALIZATION:
+    Uses WEIGHTED micromatch approach with NORMALIZATION and RATING-BASED SCALING:
     - Red team (7 players): each plays 3 matches with weight = WEIGHT_MULTIPLIER / 3
     - Black team (3 players): each plays 7 matches with weight = WEIGHT_MULTIPLIER / 7
     - NO matches between teammates
     - Normalization forces total rating change = 0 (zero-sum)
+    - Rating-based scaling adjusts changes based on rating difference vs opponents
     """
     if len(players_data) != 10:
         raise ValueError(f"Game {game_id} must have exactly 10 players, got {len(players_data)}")
@@ -326,18 +404,69 @@ def process_game(game_id: int, players_data: List[Tuple[int, bool]],
     )
     correction = total_change / 10.0
     
-    # Step 3: Apply normalization and update current_ratings
+    # Step 3: Apply normalization, then rating-based scaling, then re-normalize
     results = {}
+    
+    # First, calculate opponent average ratings for each player
+    opponent_averages = {}
+    for player_id, player_won in players_data:
+        opponent_ratings = []
+        for other_id, other_won in players_data:
+            if other_id != player_id and player_won != other_won:  # Only opponents
+                opponent_ratings.append(current_ratings[other_id].rating)
+        opponent_averages[player_id] = sum(opponent_ratings) / len(opponent_ratings) if opponent_ratings else INITIAL_RATING
+    
+    # Apply normalization, RD correction, and rating-based scaling
+    scaled_results = {}
     for player_id, _ in players_data:
         rating_before, rating_after_tentative = tentative_results[player_id]
         
-        # Apply correction
+        # Apply first normalization correction
         normalized_rating = rating_after_tentative.rating - correction
+        normalized_change = normalized_rating - rating_before.rating
+        
+        # Apply RD correction: high RD players' changes should be dampened
+        # This counteracts the base Glicko-2 tendency to make high RD players more volatile
+        # Apply strongly to winners, minimally to losers
+        rd_baseline = 52.0
+        is_win = normalized_change > 0
+        if rating_before.rd > rd_baseline and _rating_scaling_config.get('enabled', False):
+            rd_excess = rating_before.rd - rd_baseline
+            # Use different correction factors for wins vs losses
+            if is_win:
+                rd_correction_factor = 1.0 / (1.0 + rd_excess * 0.022)  # Strong dampening for winners
+            else:
+                rd_correction_factor = 1.0 / (1.0 + rd_excess * 0.002)  # Minimal dampening for losers
+            normalized_change = normalized_change * rd_correction_factor
+        
+        # Apply rating-based scaling to the RD-corrected change
+        scaled_change = apply_rating_based_scaling(
+            player_rating=rating_before.rating,
+            player_rd=rating_before.rd,
+            base_change=normalized_change,
+            opponent_avg_rating=opponent_averages[player_id],
+            config=_rating_scaling_config
+        )
+        
+        scaled_results[player_id] = (rating_before, scaled_change, rating_after_tentative.rd, rating_after_tentative.sigma)
+    
+    # Step 4: Re-normalize after scaling to maintain zero-sum
+    total_scaled_change = sum(scaled_results[pid][1] for pid, _ in players_data)
+    final_correction = total_scaled_change / 10.0
+    
+    # Apply final correction and create results
+    for player_id, _ in players_data:
+        rating_before, scaled_change, new_rd, new_sigma = scaled_results[player_id]
+        
+        # Apply second normalization
+        final_change = scaled_change - final_correction
+        final_rating = rating_before.rating + final_change
+        
         rating_after_final = PlayerRating(
             player_id,
-            normalized_rating,
-            rating_after_tentative.rd,
-            rating_after_tentative.sigma
+            final_rating,
+            new_rd,
+            new_sigma
         )
         
         results[player_id] = (rating_before, rating_after_final)

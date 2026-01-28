@@ -7,13 +7,25 @@
     "weight_multiplier": 2.25,
     "epsilon": 0.000001
   },
+  "rating_scaling": {
+    "enabled": true,
+    "rating_sensitivity": 310.0,
+    "rd_dampening": 0.036,
+    "max_scaling": 1.60,
+    "min_scaling": 0.91
+  },
   "description": {
     "initial_rating": "Starting rating for all new players (default: 1500)",
     "initial_rd": "Starting Rating Deviation (uncertainty). Lower = less volatile. Range: 100-350",
     "initial_sigma": "Starting volatility parameter. Range: 0.03-0.12",
     "tau": "System volatility constraint. Higher = more volatile ratings. Range: 0.3-2.0",
     "weight_multiplier": "Multiplier for micromatch weights. Higher = bigger rating swings. Range: 1.0-3.0",
-    "epsilon": "Convergence tolerance for calculations. Don't change unless you know what you're doing."
+    "epsilon": "Convergence tolerance for calculations. Don't change unless you know what you're doing.",
+    "rating_scaling.enabled": "Enable rating-based scaling that adjusts changes based on rating difference vs opponents",
+    "rating_scaling.rating_sensitivity": "Controls scaling strength. Higher = less aggressive. Range: 200-500",
+    "rating_scaling.rd_dampening": "Reduces scaling effect for high RD players. Higher = more dampening. Range: 0.01-0.03",
+    "rating_scaling.max_scaling": "Maximum multiplier for rating changes. Range: 1.3-2.0",
+    "rating_scaling.min_scaling": "Minimum multiplier for rating changes. Range: 0.5-0.9"
   }
 }
 
