@@ -227,7 +227,15 @@ def update_rating(player: PlayerRating, opponents: List[PlayerRating], results: 
 
 def process_game(game_id: int, players_data: List[Tuple[int, bool]], 
                  current_ratings: Dict[int, PlayerRating]) -> Dict[int, Tuple[PlayerRating, PlayerRating]]:
-    """Process a single game and compute rating changes for all players."""
+    """
+    Process a single game and compute rating changes for all players.
+    
+    Uses micromatch approach: each player only plays against opposing team.
+    - Red team (7 players): each plays 3 matches vs Black team
+    - Black team (3 players): each plays 7 matches vs Red team
+    - NO matches between teammates (no 0.5 draws)
+    - Total: 21 unique micromatches per game (7 × 3)
+    """
     if len(players_data) != 10:
         raise ValueError(f"Game {game_id} must have exactly 10 players, got {len(players_data)}")
     
@@ -245,13 +253,17 @@ def process_game(game_id: int, players_data: List[Tuple[int, bool]],
             if other_id == player_id:
                 continue
             
+            # ONLY match against opposing team (different outcomes)
+            # NO micromatches between teammates
+            if player_won == other_won:
+                continue  # Skip teammates
+            
             if other_id not in current_ratings:
                 current_ratings[other_id] = PlayerRating(other_id)
             opponents.append(current_ratings[other_id])
             
-            if player_won == other_won:
-                game_results.append(0.5)
-            elif player_won:
+            # Player won, opponent lost
+            if player_won:
                 game_results.append(1.0)
             else:
                 game_results.append(0.0)

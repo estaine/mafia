@@ -153,31 +153,33 @@ Traditional win percentage treats all opponents equally - beating a beginner = b
 - Not 1v1 like chess
 - Citizens (6) + Sheriff (1) vs Mafia (3 including Don)
 
-**Our Solution:** 45 mini-games per game
-- Each player plays against all 9 others
-- 10 players = 45 pairwise comparisons
+**Our Solution:** Micromatch approach - 21 mini-games per game
+- Each Red player (7) plays against 3 Black opponents
+- Each Black player (3) plays against 7 Red opponents
+- **NO** matches between teammates!
+- 7 reds × 3 blacks = 21 unique micromatches
 
 **Scoring:**
 - **Win against opponent:** 1.0 point
 - **Loss against opponent:** 0.0 points
-- **Same team (both win/lose):** 0.5 points (draw)
+- **Teammate matches:** Don't exist (not counted)
 
 ---
 
 ## Example: One Game Breakdown
 
 **Game:** Citizens win
-**Player:** Сяргей (Citizen, won)
+**Player:** Сяргей (Red team - Citizen, won)
 
-**His opponents:**
-- 6 teammates (also won): 6 × 0.5 = 3.0 points
-- 3 mafia (lost): 3 × 1.0 = 3.0 points
-- **Total: 6.0 points out of 9 possible**
+**His micromatches:**
+- 6 teammates: NO matches (teammates don't play each other)
+- 3 black opponents (all lost): 3 × 1.0 = **3.0 points**
+- **Total: 3 wins out of 3 matches**
 
-**If Сяргей was Mafia (lost):**
-- 2 teammates (also lost): 2 × 0.5 = 1.0 points
-- 7 citizens (won): 7 × 0.0 = 0.0 points
-- **Total: 1.0 points out of 9 possible**
+**If Сяргей was Black team - Mafia (lost):**
+- 2 teammates: NO matches (teammates don't play each other)
+- 7 red opponents (all won): 7 × 0.0 = **0.0 points**
+- **Total: 0 wins out of 7 matches**
 
 ---
 

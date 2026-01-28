@@ -144,7 +144,14 @@ def update_rating(player: PlayerRating, opponents: List[PlayerRating], results: 
 
 def process_game(game_id: int, players_data: List[Tuple[int, bool]], 
                  current_ratings: Dict[int, PlayerRating]) -> Dict[int, Tuple[PlayerRating, PlayerRating]]:
-    """Process a single game and compute rating changes for all players."""
+    """
+    Process a single game and compute rating changes for all players.
+    
+    Uses micromatch approach: each player only plays against opposing team.
+    - Red team: each plays vs Black team only
+    - Black team: each plays vs Red team only
+    - NO matches between teammates
+    """
     if len(players_data) != 10:
         raise ValueError(f"Game {game_id} must have exactly 10 players, got {len(players_data)}")
     
@@ -162,13 +169,17 @@ def process_game(game_id: int, players_data: List[Tuple[int, bool]],
             if other_id == player_id:
                 continue
             
+            # ONLY match against opposing team (different outcomes)
+            # NO micromatches between teammates
+            if player_won == other_won:
+                continue  # Skip teammates
+            
             if other_id not in current_ratings:
                 current_ratings[other_id] = PlayerRating(other_id)
             opponents.append(current_ratings[other_id])
             
-            if player_won == other_won:
-                game_results.append(0.5)
-            elif player_won:
+            # Player won, opponent lost
+            if player_won:
                 game_results.append(1.0)
             else:
                 game_results.append(0.0)
@@ -187,12 +198,12 @@ def print_separator():
 def test_scenario_1_all_new_players():
     """Test 1: All players start with default rating (1500)."""
     print_separator()
-    print("TEST 1: All 10 players are new (rating 1500), Citizens win")
+    print("TEST 1: All 10 players are new (rating 1500), Red team wins")
     print_separator()
     
     current_ratings = {}
     
-    # 8 citizens (won), 2 mafia (lost)
+    # 7 red team (won), 3 black team (lost)
     players_data = [
         (1, True),   # Citizen
         (2, True),   # Citizen
@@ -200,10 +211,10 @@ def test_scenario_1_all_new_players():
         (4, True),   # Citizen
         (5, True),   # Citizen
         (6, True),   # Citizen
-        (7, True),   # Citizen
-        (8, True),   # Citizen (Sheriff)
+        (7, True),   # Sheriff
+        (8, False),  # Mafia
         (9, False),  # Mafia
-        (10, False), # Mafia (Don)
+        (10, False), # Don
     ]
     
     results = process_game(1, players_data, current_ratings)
@@ -221,8 +232,8 @@ def test_scenario_1_all_new_players():
         
         print(f"P{pid:<9} {before.rating:<15.2f} {after.rating:<15.2f} {rating_change:+10.2f} {rd_change:+12.2f}  {status}")
     
-    print(f"\nAverage rating change for winners: {sum(results[i][1].rating - results[i][0].rating for i in range(1, 9)) / 8:.2f}")
-    print(f"Average rating change for losers:  {sum(results[i][1].rating - results[i][0].rating for i in range(9, 11)) / 2:.2f}")
+    print(f"\nAverage rating change for winners (7 red): {sum(results[i][1].rating - results[i][0].rating for i in range(1, 8)) / 7:.2f}")
+    print(f"Average rating change for losers (3 black):  {sum(results[i][1].rating - results[i][0].rating for i in range(8, 11)) / 3:.2f}")
 
 
 def test_scenario_2_mixed_ratings():
@@ -232,21 +243,21 @@ def test_scenario_2_mixed_ratings():
     print_separator()
     
     current_ratings = {
-        # Strong citizens (but they lose)
+        # Strong red team (but they lose)
         1: PlayerRating(1, rating=1800, rd=80),
         2: PlayerRating(2, rating=1750, rd=90),
         3: PlayerRating(3, rating=1700, rd=85),
         4: PlayerRating(4, rating=1650, rd=95),
         5: PlayerRating(5, rating=1600, rd=100),
         6: PlayerRating(6, rating=1550, rd=110),
-        # Weak mafia (but they win!)
-        7: PlayerRating(7, rating=1300, rd=120),
-        8: PlayerRating(8, rating=1250, rd=130),
-        9: PlayerRating(9, rating=1200, rd=140),
-        10: PlayerRating(10, rating=1150, rd=150),
+        7: PlayerRating(7, rating=1500, rd=115),
+        # Weak black team (but they win!)
+        8: PlayerRating(8, rating=1300, rd=120),
+        9: PlayerRating(9, rating=1250, rd=130),
+        10: PlayerRating(10, rating=1200, rd=140),
     }
     
-    # Mafia wins (upset!)
+    # Black team wins (upset!)
     players_data = [
         (1, False),  # Citizen - lost
         (2, False),  # Citizen - lost
@@ -254,10 +265,10 @@ def test_scenario_2_mixed_ratings():
         (4, False),  # Citizen - lost
         (5, False),  # Citizen - lost
         (6, False),  # Citizen - lost
-        (7, True),   # Mafia - won
+        (7, False),  # Sheriff - lost
         (8, True),   # Mafia - won
         (9, True),   # Mafia - won
-        (10, True),  # Mafia (Don) - won
+        (10, True),  # Don - won
     ]
     
     results = process_game(2, players_data, current_ratings)
@@ -271,12 +282,13 @@ def test_scenario_2_mixed_ratings():
         rating_change = after.rating - before.rating
         won = players_data[pid-1][1]
         status = "WON" if won else "LOST"
-        role = "Mafia" if pid >= 7 else "Citizen"
+        role = "Black" if pid >= 8 else "Red"
         
         print(f"P{pid} ({role:<6}) {before.rating:<15.2f} {after.rating:<15.2f} {rating_change:+10.2f} {status}")
     
-    print(f"\nNote: Weak mafia gained a LOT for beating strong citizens (upset victory)")
-    print(f"      Strong citizens lost a LOT for losing to weak mafia")
+    print(f"\nNote: Weak black team gained a LOT for beating strong red team (upset victory)")
+    print(f"      Strong red team lost a LOT for losing to weak black team")
+    print(f"      Black players played 7 matches each, red players played 3 matches each")
 
 
 def test_scenario_3_multiple_games():
