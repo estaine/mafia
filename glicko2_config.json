@@ -10,13 +10,13 @@
   "rating_scaling": {
     "enabled": true,
     "rating_sensitivity": 240.0,
-    "rd_dampening": 0.048,
+    "rd_dampening": 0.038,
     "max_scaling": 1.55,
     "min_scaling": 0.97,
     "rd_baseline_scaling": 52.0,
-    "rd_baseline_correction": 51.0,
-    "rd_correction_winner_factor": 0.065,
-    "rd_correction_loser_factor": 0.0005
+    "rd_baseline_correction": 52.0,
+    "rd_correction_winner_factor": 0.048,
+    "rd_correction_loser_factor": 0.0003
   },
   "description": {
     "initial_rating": "Starting rating for all new players (default: 1500)",
