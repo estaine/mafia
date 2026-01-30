@@ -1822,6 +1822,26 @@
                 width: 20%;
             }
 
+            /* Adaptive font size for partner table on mobile */
+            #partnerOpponentTable th,
+            #partnerOpponentTable td {
+                font-size: clamp(10px, 3vw, 14px);
+                padding: 8px 4px;
+            }
+
+            /* Make player name wrap if too long */
+            #partnerOpponentTable td:nth-child(1) {
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                hyphens: auto;
+                line-height: 1.2;
+            }
+
+            /* Ensure percentage values fit */
+            #partnerOpponentTable .percentage-cell {
+                font-size: clamp(10px, 2.8vw, 14px) !important;
+            }
+
             /* Mobile optimizations for comparison table - shorten column headers */
             /* Second row has no first column due to rowspan, so indices are: 1=wins1, 2=losses1, 3=games1, 4=%1, 5=wins2, 6=losses2, 7=games2, 8=%2 */
             .comparison-table thead tr:nth-child(2) th:nth-child(1),
