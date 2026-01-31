@@ -1462,9 +1462,9 @@
                 padding: 8px 5px;
             }
 
-            /* Hide columns except: name, red%, black%, total, win% */
-            #dataTable th:not(:nth-child(1)):not(:nth-child(9)):not(:nth-child(17)):not(:nth-child(20)):not(:nth-child(21)),
-            #dataTable td:not(:nth-child(1)):not(:nth-child(9)):not(:nth-child(17)):not(:nth-child(20)):not(:nth-child(21)) {
+            /* Hide columns except: name, red%, black%, total, win%, rating */
+            #dataTable th:not(:nth-child(1)):not(:nth-child(9)):not(:nth-child(17)):not(:nth-child(20)):not(:nth-child(21)):not(:nth-child(22)),
+            #dataTable td:not(:nth-child(1)):not(:nth-child(9)):not(:nth-child(17)):not(:nth-child(20)):not(:nth-child(21)):not(:nth-child(22)) {
                 display: none;
             }
 
@@ -1474,11 +1474,13 @@
             #dataTable th:nth-child(17),
             #dataTable th:nth-child(20),
             #dataTable th:nth-child(21),
+            #dataTable th:nth-child(22),
             #dataTable td:nth-child(1),
             #dataTable td:nth-child(9),
             #dataTable td:nth-child(17),
             #dataTable td:nth-child(20),
-            #dataTable td:nth-child(21) {
+            #dataTable td:nth-child(21),
+            #dataTable td:nth-child(22) {
                 font-size: 11px;
                 padding: 8px 3px;
             }
@@ -1523,11 +1525,59 @@
                 text-align: center;
             }
 
+            /* Replace "Рэйтынг" with R on mobile */
+            #dataTable th:nth-child(22) {
+                font-size: 0;
+            }
+
+            #dataTable th:nth-child(22)::after {
+                content: 'R ⇅';
+                font-size: 12px;
+                font-weight: bold;
+                display: inline-block;
+                min-width: 2.5em;
+                text-align: center;
+            }
+
+            #dataTable th:nth-child(22).sortable::after {
+                opacity: 0.4;
+            }
+
+            #dataTable th:nth-child(22).sorted-asc::after {
+                content: 'R ▲';
+                font-size: 12px;
+                font-weight: bold;
+                opacity: 1;
+                color: #ecf0f1;
+                display: inline-block;
+                min-width: 2.5em;
+                text-align: center;
+            }
+
+            #dataTable th:nth-child(22).sorted-desc::after {
+                content: 'R ▼';
+                font-size: 12px;
+                font-weight: bold;
+                opacity: 1;
+                color: #ecf0f1;
+                display: inline-block;
+                min-width: 2.5em;
+                text-align: center;
+            }
+
             /* Make player name column a bit wider, compress percentage columns */
             #dataTable th:nth-child(1),
             #dataTable td:nth-child(1) {
                 max-width: none;
                 min-width: 80px;
+            }
+
+            /* Make player name wrap if too long (with hyphenation for long names without spaces) */
+            #dataTable td:nth-child(1) {
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                hyphens: auto;
+                line-height: 1.2;
             }
 
             #dataTable th:nth-child(9),
@@ -1557,6 +1607,14 @@
             }
 
             .table-wrapper.show-all-columns #dataTable th:nth-child(20)::after {
+                content: none;
+            }
+
+            .table-wrapper.show-all-columns #dataTable th:nth-child(22) {
+                font-size: 12px;
+            }
+
+            .table-wrapper.show-all-columns #dataTable th:nth-child(22)::after {
                 content: none;
             }
 
@@ -2076,7 +2134,7 @@
         let playerData = [];
         let filteredPlayerData = [];
         let allGamesData = [];
-        let currentSort = { column: 'winPct', ascending: true };
+        let currentSort = { column: 'rating', ascending: false };
         let selectedPlayers = [];
         let filterMinGames = 0;
         let filterMaxGames = 100;
@@ -5308,9 +5366,9 @@
                 playerData = await enrichPlayerDataWithRating(playerData);
                 filteredPlayerData = [...playerData];
 
-                // Sort by win percentage descending by default
-                currentSort = { column: 'winPct', ascending: true };
-                sortData('winPct');
+                // Sort by rating descending by default
+                currentSort = { column: 'rating', ascending: false };
+                sortData('rating');
 
                 // Hide status message and show filters and table
                 document.getElementById('status').classList.remove('show');
