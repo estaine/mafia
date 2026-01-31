@@ -1650,6 +1650,24 @@
             .comparison-table td {
                 padding: 5px 2px !important;
                 font-size: 9px !important;
+                white-space: normal !important;
+            }
+
+            /* Allow player name headers to wrap */
+            .comparison-table thead th {
+                white-space: normal !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+            }
+
+            /* Force player name headers in first row to wrap */
+            .comparison-table thead tr:first-child th:not(:first-child) {
+                white-space: normal !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                hyphens: auto !important;
+                min-height: 30px !important;
+                padding: 5px 2px !important;
             }
 
             /* First column - role names */
@@ -1666,7 +1684,7 @@
                 text-overflow: clip;
             }
 
-            /* Data columns: +, -, Σ - all same width */
+            /* Data columns: +, -, Σ - make narrower */
             .comparison-table th:nth-child(2),
             .comparison-table td:nth-child(2),
             .comparison-table th:nth-child(3),
@@ -1679,19 +1697,27 @@
             .comparison-table td:nth-child(7),
             .comparison-table th:nth-child(8),
             .comparison-table td:nth-child(8) {
-                width: 32px !important;
-                max-width: 32px !important;
-                min-width: 32px !important;
+                width: 24px !important;
+                max-width: 24px !important;
+                min-width: 24px !important;
             }
 
-            /* Percentage columns - twice as wide */
+            /* Percentage columns */
             .comparison-table th:nth-child(5),
             .comparison-table td:nth-child(5),
             .comparison-table th:nth-child(9),
             .comparison-table td:nth-child(9) {
-                width: 40px !important;
-                max-width: 40px !important;
-                min-width: 40px !important;
+                width: 35px !important;
+                max-width: 35px !important;
+                min-width: 35px !important;
+            }
+
+            /* Force both player header sections to be equal width */
+            .comparison-table thead tr:first-child th:nth-child(2),
+            .comparison-table thead tr:first-child th:nth-child(3) {
+                width: calc((100% - 35px) / 2) !important;
+                max-width: calc((100% - 35px) / 2) !important;
+                min-width: calc((100% - 35px) / 2) !important;
             }
 
             .personal-stats-table th,
@@ -1720,35 +1746,135 @@
                 text-align: center;
             }
 
-            /* Mobile optimizations for stats-table (Агульная статыстыка) */
-            .stats-table th:nth-child(2) {
+            /* Mobile optimizations for stats-table (Агульная статыстыка) - exclude partner table */
+            /* Make first column narrower for shorter role names */
+            .stats-table:not(#partnerOpponentTable) th:first-child,
+            .stats-table:not(#partnerOpponentTable) td:first-child {
+                width: 35px !important;
+                max-width: 35px !important;
+                min-width: 35px !important;
+                padding: 8px 4px !important;
+            }
+
+            /* Change "Роля" header to "Р" */
+            .stats-table:not(#partnerOpponentTable) th:first-child {
                 font-size: 0;
             }
 
-            .stats-table th:nth-child(2)::after {
+            .stats-table:not(#partnerOpponentTable) th:first-child::after {
+                content: 'Р';
+                font-size: 13px;
+                font-weight: 500;
+            }
+
+            .stats-table:not(#partnerOpponentTable) th:nth-child(2) {
+                font-size: 0;
+            }
+
+            .stats-table:not(#partnerOpponentTable) th:nth-child(2)::after {
                 content: '+';
                 font-size: 13px;
                 font-weight: bold;
             }
 
-            .stats-table th:nth-child(3) {
+            .stats-table:not(#partnerOpponentTable) th:nth-child(3) {
                 font-size: 0;
             }
 
-            .stats-table th:nth-child(3)::after {
+            .stats-table:not(#partnerOpponentTable) th:nth-child(3)::after {
                 content: '−';
                 font-size: 13px;
                 font-weight: bold;
             }
 
-            .stats-table th:nth-child(4) {
+            .stats-table:not(#partnerOpponentTable) th:nth-child(4) {
                 font-size: 0;
             }
 
-            .stats-table th:nth-child(4)::after {
+            .stats-table:not(#partnerOpponentTable) th:nth-child(4)::after {
                 content: 'Σ';
                 font-size: 13px;
                 font-weight: bold;
+            }
+
+            /* Mobile optimizations for first column role names */
+            /* Row 1: Мірны жыхар -> М */
+            .stats-table:not(#partnerOpponentTable) tbody tr:nth-child(1) td:first-child {
+                font-size: 0;
+            }
+
+            .stats-table:not(#partnerOpponentTable) tbody tr:nth-child(1) td:first-child::after {
+                content: 'М';
+                font-size: 13px;
+                font-weight: 600;
+            }
+
+            /* Row 2: Шэрыф -> Ш */
+            .stats-table:not(#partnerOpponentTable) tbody tr:nth-child(2) td:first-child {
+                font-size: 0;
+            }
+
+            .stats-table:not(#partnerOpponentTable) tbody tr:nth-child(2) td:first-child::after {
+                content: 'Ш';
+                font-size: 13px;
+                font-weight: 600;
+            }
+
+            /* Row 3: Агулам за чырвоных -> red square */
+            .stats-table:not(#partnerOpponentTable) tbody tr:nth-child(3) td:first-child {
+                font-size: 0;
+            }
+
+            .stats-table:not(#partnerOpponentTable) tbody tr:nth-child(3) td:first-child::after {
+                content: '■';
+                font-size: 13px;
+                font-weight: 600;
+                color: #e74c3c;
+            }
+
+            /* Row 4: Мафія -> МФ */
+            .stats-table:not(#partnerOpponentTable) tbody tr:nth-child(4) td:first-child {
+                font-size: 0;
+            }
+
+            .stats-table:not(#partnerOpponentTable) tbody tr:nth-child(4) td:first-child::after {
+                content: 'МФ';
+                font-size: 13px;
+                font-weight: 600;
+            }
+
+            /* Row 5: Дон -> Д */
+            .stats-table:not(#partnerOpponentTable) tbody tr:nth-child(5) td:first-child {
+                font-size: 0;
+            }
+
+            .stats-table:not(#partnerOpponentTable) tbody tr:nth-child(5) td:first-child::after {
+                content: 'Д';
+                font-size: 13px;
+                font-weight: 600;
+            }
+
+            /* Row 6: Агулам за чорных -> black square */
+            .stats-table:not(#partnerOpponentTable) tbody tr:nth-child(6) td:first-child {
+                font-size: 0;
+            }
+
+            .stats-table:not(#partnerOpponentTable) tbody tr:nth-child(6) td:first-child::after {
+                content: '■';
+                font-size: 13px;
+                font-weight: 600;
+                color: #2c3e50;
+            }
+
+            /* Row 7: Усяго -> Σ */
+            .stats-table:not(#partnerOpponentTable) tbody tr:nth-child(7) td:first-child {
+                font-size: 0;
+            }
+
+            .stats-table:not(#partnerOpponentTable) tbody tr:nth-child(7) td:first-child::after {
+                content: 'Σ';
+                font-size: 13px;
+                font-weight: 600;
             }
 
             /* Mobile optimizations for partner/opponent table - shorten column headers */
@@ -1936,6 +2062,107 @@
                 content: 'Σ';
                 font-size: 11px;
                 font-weight: bold;
+            }
+
+            /* Allow player names to wrap in comparison table header */
+            .comparison-table .player-column-header {
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                hyphens: auto !important;
+                line-height: 1.2 !important;
+                white-space: normal !important;
+                word-break: break-word !important;
+            }
+
+            /* Change "Роля" header to "Р" in comparison table */
+            .comparison-table thead tr:nth-child(1) th:first-child {
+                font-size: 0 !important;
+            }
+
+            .comparison-table thead tr:nth-child(1) th:first-child::after {
+                content: 'Р';
+                font-size: 11px !important;
+                font-weight: bold;
+            }
+
+            /* Mobile optimizations for comparison table first column role names */
+            /* Row 1: Мірны жыхар -> М */
+            .comparison-table tbody tr:nth-child(1) td:first-child {
+                font-size: 0 !important;
+            }
+
+            .comparison-table tbody tr:nth-child(1) td:first-child::after {
+                content: 'М';
+                font-size: 9px !important;
+                font-weight: 600;
+            }
+
+            /* Row 2: Шэрыф -> Ш */
+            .comparison-table tbody tr:nth-child(2) td:first-child {
+                font-size: 0 !important;
+            }
+
+            .comparison-table tbody tr:nth-child(2) td:first-child::after {
+                content: 'Ш';
+                font-size: 9px !important;
+                font-weight: 600;
+            }
+
+            /* Row 3: Агулам за чырвоных -> red square */
+            .comparison-table tbody tr:nth-child(3) td:first-child {
+                font-size: 0 !important;
+            }
+
+            .comparison-table tbody tr:nth-child(3) td:first-child::after {
+                content: '■';
+                font-size: 9px !important;
+                font-weight: 600;
+                color: #e74c3c;
+            }
+
+            /* Row 4: Мафія -> МФ */
+            .comparison-table tbody tr:nth-child(4) td:first-child {
+                font-size: 0 !important;
+            }
+
+            .comparison-table tbody tr:nth-child(4) td:first-child::after {
+                content: 'МФ';
+                font-size: 9px !important;
+                font-weight: 600;
+            }
+
+            /* Row 5: Дон -> Д */
+            .comparison-table tbody tr:nth-child(5) td:first-child {
+                font-size: 0 !important;
+            }
+
+            .comparison-table tbody tr:nth-child(5) td:first-child::after {
+                content: 'Д';
+                font-size: 9px !important;
+                font-weight: 600;
+            }
+
+            /* Row 6: Агулам за чорных -> black square */
+            .comparison-table tbody tr:nth-child(6) td:first-child {
+                font-size: 0 !important;
+            }
+
+            .comparison-table tbody tr:nth-child(6) td:first-child::after {
+                content: '■';
+                font-size: 9px !important;
+                font-weight: 600;
+                color: #2c3e50;
+            }
+
+            /* Row 7: Усяго -> Σ */
+            .comparison-table tbody tr:nth-child(7) td:first-child {
+                font-size: 0 !important;
+            }
+
+            .comparison-table tbody tr:nth-child(7) td:first-child::after {
+                content: 'Σ';
+                font-size: 9px !important;
+                font-weight: 600;
             }
 
             /* Mobile optimizations for personal stats table - wrapper provides horizontal scrolling */
@@ -2504,10 +2731,21 @@
                         bVal.localeCompare(aVal);
                 }
 
-                // For numbers
-                return ascending ? 
-                    aVal - bVal : 
-                    bVal - aVal;
+                // For numbers - primary sort
+                const primaryDiff = ascending ? aVal - bVal : bVal - aVal;
+                
+                // If primary values are equal and sorting by rating, apply tie-breakers
+                if (primaryDiff === 0 && column === 'rating') {
+                    // Secondary sort: total games (DESC)
+                    const totalDiff = b.total - a.total;
+                    if (totalDiff !== 0) {
+                        return totalDiff;
+                    }
+                    // Tertiary sort: win percentage (DESC)
+                    return b.winPct - a.winPct;
+                }
+                
+                return primaryDiff;
             });
         }
 
@@ -2879,14 +3117,26 @@
         const playerSearchInput = document.getElementById('playerSearchInput');
         playerSearchInput.addEventListener('input', (e) => {
             const searchTerm = e.target.value.trim();
-            if (searchTerm.length === 0) {
-                closeAutocomplete();
-                return;
-            }
             // Exclude player 2 if in comparison mode
             const excludePlayer = comparisonMode ? selectedPlayer2 : null;
+            if (searchTerm.length === 0) {
+                // Show all players sorted alphabetically when input is empty
+                const allPlayers = filterPlayers('', excludePlayer);
+                const sortedPlayers = [...allPlayers].sort((a, b) => a.name.localeCompare(b.name));
+                renderAutocomplete(sortedPlayers, false);
+                return;
+            }
             const filtered = filterPlayers(searchTerm, excludePlayer);
             renderAutocomplete(filtered, false);
+        });
+
+        // Show all players sorted alphabetically when focusing on first player input
+        playerSearchInput.addEventListener('focus', (e) => {
+            // Exclude player 2 if in comparison mode
+            const excludePlayer = comparisonMode ? selectedPlayer2 : null;
+            const allPlayers = filterPlayers('', excludePlayer);
+            const sortedPlayers = [...allPlayers].sort((a, b) => a.name.localeCompare(b.name));
+            renderAutocomplete(sortedPlayers, false);
         });
 
         // Handle autocomplete input for second player
@@ -5368,7 +5618,9 @@
 
                 // Sort by rating descending by default
                 currentSort = { column: 'rating', ascending: false };
-                sortData('rating');
+                sortFilteredData();
+                displayTable();
+                updateSortIndicators();
 
                 // Hide status message and show filters and table
                 document.getElementById('status').classList.remove('show');
